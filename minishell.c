@@ -141,7 +141,11 @@ int     execute_command(char **args, char ***envp)
     {
         printf("exit\n");
         return 0;
-    }   
+    }
+    else if (strcmp(args[0], "ls") == 0)
+    {
+        external(args);
+    }
     else
         printf("minishell: %s: command not found\n", args[0]);
     return 1;
@@ -177,15 +181,14 @@ int main(int argc, char **argv, char **envp)
     return 0;
 }
 
-void external()
+void external(char **args)
 {
     pid_t pid;
-    char *args1[]= {"/bin/ls", "-l", NULL};
     pid = fork();
         
     if(pid == 0)
     {
-        execve("/bin/ls",args1,NULL);
+        execve("/bin/ls",args,NULL);
     }
     else 
     {
