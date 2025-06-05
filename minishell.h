@@ -16,5 +16,5 @@
     char	*ft_strjoin(char const *s1, char const *s2);
     char	*ft_strdup(const char *s);
     size_t ft_strlen(const char *s);
-    void    external();
+    int    external_commands(char **args, char **envp);
 #endif

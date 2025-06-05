@@ -121,10 +121,11 @@ char **copy_env(char **envp)
     return new_env;
 }
 
-int     execute_command(char **args, char ***envp) 
+int execute_command(char **args, char ***envp) 
 {
-    if (!args[0]) 
+    if (!args[0])
         return 1;
+
     if (strcmp(args[0], "cd") == 0)
         builtin_cd(args);
     else if (strcmp(args[0], "pwd") == 0)
@@ -142,12 +143,13 @@ int     execute_command(char **args, char ***envp)
         printf("exit\n");
         return 0;
     }
-    else if (strcmp(args[0], "ls") == 0)
-    {
-        external(args);
-    }
     else
-        printf("minishell: %s: command not found\n", args[0]);
+    {
+        if (!external_commands(args,*envp))
+        {
+            printf("minishell: %s: command not found\n", args[0]);
+        }
+    }
     return 1;
 }
 
@@ -181,17 +183,41 @@ int main(int argc, char **argv, char **envp)
     return 0;
 }
 
-void external(char **args)
+int external_commands(char **args,char ** envp)
 {
     pid_t pid;
-    pid = fork();
-        
-    if(pid == 0)
+    char *path_env = getenv("PATH");
+    if (!path_env)
+        return 0;
+
+    char **paths = ft_split(path_env, ':');
+    char *program_path;
+    int i = 0;
+
+    while (paths[i])
     {
-        execve("/bin/ls",args,NULL);
+        char *temp = ft_strjoin(paths[i], "/");
+        program_path = ft_strjoin(temp, args[0]);
+        free(temp);
+        if (access(program_path, X_OK) == 0)
+            break;
+        free(program_path);
+        program_path = NULL;
+        i++;
     }
-    else 
+    if (!program_path)
+        return 0;
+    pid = fork();
+    if (pid == 0)
+    {
+        execve(program_path, args, envp);
+        perror("execve");
+        exit(1);
+    }
+    else
     {
         wait(NULL);
     }
+    free(program_path);
+    return 1;
 }
