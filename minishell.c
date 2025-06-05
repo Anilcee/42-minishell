@@ -8,7 +8,7 @@ int builtin_cd(char **args)
     }
     else if ( chdir(args[1])!= 0) 
     {
-        printf("YOL BULUNAMADI");
+        printf("minishell: %s: %s: No such file or directory\n",args[0],args[1]);
     }
     return 0;
 }
@@ -37,7 +37,7 @@ void builtin_echo(char** str)
     }
     while(str[i])
     {
-        printf("%s",str[i]);
+        printf("%s ",str[i]);
         i++;
     }
     printf("\n");
@@ -125,7 +125,6 @@ int execute_command(char **args, char ***envp)
 {
     if (!args[0])
         return 1;
-
     if (strcmp(args[0], "cd") == 0)
         builtin_cd(args);
     else if (strcmp(args[0], "pwd") == 0)
@@ -146,9 +145,7 @@ int execute_command(char **args, char ***envp)
     else
     {
         if (!external_commands(args,*envp))
-        {
             printf("minishell: %s: command not found\n", args[0]);
-        }
     }
     return 1;
 }
