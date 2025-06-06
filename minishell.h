@@ -10,10 +10,20 @@
 # include <sys/wait.h>
 # include <signal.h>
 
+typedef enum e_token_type {
+	T_WORD,
+	T_PIPE,
+	T_REDIRECT_IN,
+	T_REDIRECT_OUT,
+	T_APPEND,
+	T_HEREDOC
+}	t_token_type;
+
 typedef struct s_token
 {
 	char			*value;
 	struct s_token	*next;
+	t_token_type t_type;
 }	t_token;
 
 char	**ft_split(const char *str, char separator);

@@ -35,12 +35,17 @@ void builtin_echo(char** str)
         printf("%d\n",getpid());
         return ;
     }
+    if(str[0][0]=='-'&&str[0][1]=='n')
+    {
+        i++;   
+    }
     while(str[i])
     {
         printf("%s ",str[i]);
         i++;
     }
-    printf("\n");
+    if(str[0][0]!='-'&&str[0][1]!='n')
+        printf("\n");
 }
 
 void builtin_env(char** envp) 
@@ -180,30 +185,42 @@ int main(int argc, char **argv, char **envp)
     return 0;
 }
 
-int external_commands(char **args,char ** envp)
+int external_commands(char **args, char **envp)
 {
     pid_t pid;
-    char *path_env = getenv("PATH");
-    if (!path_env)
-        return 0;
+    char *path_env;
+    char **paths = NULL;
+    char *program_path = NULL;
 
-    char **paths = ft_split(path_env, ':');
-    char *program_path;
-    int i = 0;
-
-    while (paths[i])
+    if (args[0][0] == '/' || args[0][0] == '.')
     {
-        char *temp = ft_strjoin(paths[i], "/");
-        program_path = ft_strjoin(temp, args[0]);
-        free(temp);
-        if (access(program_path, X_OK) == 0)
-            break;
-        free(program_path);
-        program_path = NULL;
-        i++;
+        if (access(args[0], X_OK) != 0)
+            return 0;
+        program_path = strdup(args[0]);
     }
+    else
+    {
+        path_env = getenv("PATH");
+        if (!path_env)
+            return 0;
+        paths = ft_split(path_env, ':');
+        int i = 0;
+        while (paths[i])
+        {
+            char *temp = ft_strjoin(paths[i], "/");
+            program_path = ft_strjoin(temp, args[0]);
+            free(temp);
+            if (access(program_path, X_OK) == 0)
+                break;
+            free(program_path);
+            program_path = NULL;
+            i++;
+        }
+    }
+
     if (!program_path)
         return 0;
+
     pid = fork();
     if (pid == 0)
     {
@@ -215,6 +232,16 @@ int external_commands(char **args,char ** envp)
     {
         wait(NULL);
     }
+
     free(program_path);
+    if (paths)
+    {
+        int j = 0;
+        while (paths[j])
+            free(paths[j++]);
+        free(paths);
+    }
+
     return 1;
 }
+
