@@ -126,6 +126,119 @@ char **copy_env(char **envp)
     return new_env;
 }
 
+int handle_redirections(char **args)
+{
+    int i = 0;
+    int fd;
+
+    while (args[i])
+    {
+        if (strcmp(args[i], "<") == 0)
+        {
+            if (args[i + 1] == NULL)
+                return -1;
+
+            fd = open(args[i + 1], O_RDONLY);
+            if (fd < 0)
+                return -1;
+
+            dup2(fd, STDIN_FILENO);
+            close(fd);
+            while (args[i + 2])
+            {
+                args[i] = args[i + 2];
+                i++;
+            }
+            args[i] = NULL;
+            args[i + 1] = NULL;
+            i = 0;
+            continue;
+        }
+        else if (strcmp(args[i], ">") == 0)
+        {
+            if (args[i + 1] == NULL)
+                return -1;
+            fd = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd < 0)
+                return -1;
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+            while (args[i + 2])
+            {
+                args[i] = args[i + 2];
+                i++;
+            }
+            args[i] = NULL;
+            args[i + 1] = NULL;
+            i = 0;
+            continue;
+        }
+        else if (strcmp(args[i], ">>") == 0)
+        {
+            if (args[i + 1] == NULL)
+                return -1;
+            fd = open(args[i + 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
+            if (fd < 0)
+                return -1;
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+
+            while (args[i + 2])
+            {
+                args[i] = args[i + 2];
+                i++;
+            }
+            args[i] = NULL;
+            args[i + 1] = NULL;
+            i = 0;
+            continue;
+        }
+        else if (strcmp(args[i], "<<") == 0)
+        {
+            if (args[i + 1] == NULL)
+                return -1;
+            char *delimiter = args[i + 1];
+            int pipefd[2];
+            if (pipe(pipefd) == -1)
+                return -1;
+            char *line = NULL;
+            while (1)
+            {
+                write(STDOUT_FILENO, "> ", 2); 
+                line = get_next_line(STDIN_FILENO);
+                if (!line)
+                    break;
+                int len = strlen(line);
+                if (len > 0 && line[len - 1] == '\n')
+                line[len - 1] = '\0';
+
+                if (strcmp(line, delimiter) == 0)
+                {
+                    free(line);
+                    break;
+                }
+                write(pipefd[1], line, strlen(line));
+                write(pipefd[1], "\n", 1);
+                free(line);
+            }
+            close(pipefd[1]);
+            dup2(pipefd[0], STDIN_FILENO);
+            close(pipefd[0]);
+            while (args[i + 2])
+            {
+                args[i] = args[i + 2];
+                i++;
+            }
+            args[i] = NULL;
+            args[i + 1] = NULL;
+            i = 0;
+            continue;
+        }
+         i++;
+    }
+        return 0;
+}
+
 int execute_command(char **args, char ***envp) 
 {
     if (!args[0])
@@ -155,6 +268,15 @@ int execute_command(char **args, char ***envp)
     return 1;
 }
 
+void sigint_handler(int sig)
+{
+    (void)sig;
+    write(1, "\n", 1);            
+    rl_on_new_line();              
+    rl_replace_line("", 0);       
+    rl_redisplay();               
+}
+
 int main(int argc, char **argv, char **envp)
 {
     (void)argc;
@@ -163,6 +285,7 @@ int main(int argc, char **argv, char **envp)
     char *input;
     char **args;
     char **env = copy_env(envp);
+    signal(SIGINT, sigint_handler);
     while (1) 
     {  
         input = readline("minishell$ ");
@@ -224,6 +347,7 @@ int external_commands(char **args, char **envp)
     pid = fork();
     if (pid == 0)
     {
+        handle_redirections(args);
         execve(program_path, args, envp);
         perror("execve");
         exit(1);
@@ -241,7 +365,5 @@ int external_commands(char **args, char **envp)
             free(paths[j++]);
         free(paths);
     }
-
     return 1;
 }
-

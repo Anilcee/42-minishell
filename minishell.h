@@ -9,6 +9,7 @@
 # include <readline/history.h>
 # include <sys/wait.h>
 # include <signal.h>
+#include <fcntl.h>
 
 typedef enum e_token_type {
 	T_WORD,
@@ -26,6 +27,12 @@ typedef struct s_token
 	t_token_type t_type;
 }	t_token;
 
+
+#ifndef BUFFER_SIZE
+# define BUFFER_SIZE 42
+#endif
+
+char	*get_next_line(int fd);
 char	**ft_split(const char *str, char separator);
 char	*ft_strjoin(char const *s1, char const *s2);
 char	*ft_strdup(const char *s);
