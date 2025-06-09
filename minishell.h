@@ -39,4 +39,13 @@ char	*ft_strdup(const char *s);
 size_t	ft_strlen(const char *s);
 int		external_commands(char **args, char **envp);
 t_token *tokenize(char *input);
+int builtin_cd(char **args);
+void builtin_pwd(void);
+void builtin_env(char **env);
+void builtin_echo(char **args);
+void builtin_history(char *line);
+char **builtin_export(char *arg, char **env);
+char **copy_env(char **envp);
+int handle_redirections(char **args);
+
 #endif

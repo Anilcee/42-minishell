@@ -86,7 +86,7 @@ char ***split_by_pipe(char **args)
 {
     char ***commands = malloc(sizeof(char **) * 10); 
     int cmd_idx = 0;
-    int arg_idx = 0;
+    //int arg_idx = 0;
     int i = 0;
     commands[cmd_idx] = malloc(sizeof(char *) * 100);
     int inner_idx = 0;
