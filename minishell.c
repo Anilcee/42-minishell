@@ -176,6 +176,12 @@ int main(int argc, char **argv, char **envp)
             builtin_history(input);
         }
         args = ft_split(input,' ');
+        t_token *tokens =tokenize(input);
+        while(tokens)
+        {
+            printf("Token: '%s' - Tip: %d\n", tokens->value, tokens->t_type);
+            tokens=tokens->next;
+        }
         if (!execute_command(args, &env))
         {
             break;

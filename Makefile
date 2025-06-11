@@ -2,7 +2,7 @@ NAME        = minishell
 CC          = cc
 CFLAGS      = -Wall -Wextra -Werror
 LDFLAGS     = -lreadline
-SRCS        = minishell.c utils.c
+SRCS        = minishell.c utils.c tokenizer.c
 OBJS        = $(SRCS:.c=.o)
 HEADER      = minishell.h
 
