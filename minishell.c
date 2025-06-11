@@ -1,131 +1,5 @@
 #include "minishell.h"
 
-int builtin_cd(char **args) 
-{
-    if (args[1] == NULL) 
-    {
-        printf("EKSİK");
-    }
-    else if ( chdir(args[1])!= 0) 
-    {
-        printf("minishell: %s: %s: No such file or directory\n",args[0],args[1]);
-    }
-    return 0;
-}
-
-void builtin_pwd() 
-{
-   char cwd[1024];
-    if (getcwd(cwd, sizeof(cwd)) != NULL) 
-    {
-        printf("%s\n", cwd);
-    }
-    else
-    {
-        perror("getcwd hatası");
-    }   
-}
-
-void builtin_echo(char** str) 
-{
-    int i;
-    i = 0;
-    if(str[0][0] == '$' && str[0][1] == '$')
-    {
-        printf("%d\n",getpid());
-        return ;
-    }
-    if(str[0][0]=='-'&&str[0][1]=='n')
-    {
-        i++;   
-    }
-    while(str[i])
-    {
-        printf("%s ",str[i]);
-        i++;
-    }
-    if(str[0][0]!='-'&&str[0][1]!='n')
-        printf("\n");
-}
-
-void builtin_env(char** envp) 
-{
-    int i;
-
-    i = 0;
-    while (envp[i]) 
-    {
-        printf("%s\n", envp[i]);
-        i++;
-    }
-}
-
-void builtin_history(char *line) 
-{
-    static char *history[1000];
-    static int count = 0;
-    int i = 0;
-    if (line != NULL)
-    {
-        if (count < 1000)
-        {
-            history[count] = strdup(line);
-            add_history(line);
-            count++;
-        }
-    }
-    else
-    {
-        while(i < count)
-        {
-            printf("%d %s\n", i + 1, history[i]);
-            i++;
-        }
-    }
-}
-
-char **builtin_export(char* input, char** envp)
-{
-    if (!input)
-    {
-        printf("VAR=değer\n");
-        return envp;
-    }
-    int count = 0;
-    while (envp[count])
-        count++;
-    char **new_envp = malloc(sizeof(char*) * (count + 2));
-    if (!new_envp)
-        return envp;
-    int i = 0;
-    while (i < count)
-    {
-        new_envp[i] = envp[i];
-        i++;
-    }
-    new_envp[count] = ft_strdup(input); 
-    new_envp[count + 1] = NULL;
-    free(envp); 
-    return new_envp;  
-}
-
-char **copy_env(char **envp)
-{
-    int i = 0;
-    int count = 0;
-    while (envp[count])
-        count++;
-    
-    char **new_env = malloc(sizeof(char *) * (count + 1));
-    while (i < count)
-    {
-        new_env[i] = strdup(envp[i]);
-        i++;
-    }
-    new_env[i] = NULL;
-    return new_env;
-}
-
 int execute_command(char **args, char ***envp) 
 {
     if (!args[0])
@@ -155,6 +29,15 @@ int execute_command(char **args, char ***envp)
     return 1;
 }
 
+void sigint_handler(int sig)
+{
+    (void)sig;
+    write(1, "\n", 1);            
+    rl_on_new_line();              
+    rl_replace_line("", 0);       
+    rl_redisplay();               
+}
+
 int main(int argc, char **argv, char **envp)
 {
     (void)argc;
@@ -163,6 +46,7 @@ int main(int argc, char **argv, char **envp)
     char *input;
     char **args;
     char **env = copy_env(envp);
+    signal(SIGINT, sigint_handler);
     while (1) 
     {  
         input = readline("minishell$ ");
@@ -190,64 +74,3 @@ int main(int argc, char **argv, char **envp)
     printf("\033[0m");
     return 0;
 }
-
-int external_commands(char **args, char **envp)
-{
-    pid_t pid;
-    char *path_env;
-    char **paths = NULL;
-    char *program_path = NULL;
-
-    if (args[0][0] == '/' || args[0][0] == '.')
-    {
-        if (access(args[0], X_OK) != 0)
-            return 0;
-        program_path = strdup(args[0]);
-    }
-    else
-    {
-        path_env = getenv("PATH");
-        if (!path_env)
-            return 0;
-        paths = ft_split(path_env, ':');
-        int i = 0;
-        while (paths[i])
-        {
-            char *temp = ft_strjoin(paths[i], "/");
-            program_path = ft_strjoin(temp, args[0]);
-            free(temp);
-            if (access(program_path, X_OK) == 0)
-                break;
-            free(program_path);
-            program_path = NULL;
-            i++;
-        }
-    }
-
-    if (!program_path)
-        return 0;
-
-    pid = fork();
-    if (pid == 0)
-    {
-        execve(program_path, args, envp);
-        perror("execve");
-        exit(1);
-    }
-    else
-    {
-        wait(NULL);
-    }
-
-    free(program_path);
-    if (paths)
-    {
-        int j = 0;
-        while (paths[j])
-            free(paths[j++]);
-        free(paths);
-    }
-
-    return 1;
-}
-
