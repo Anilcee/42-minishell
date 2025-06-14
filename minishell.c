@@ -4,6 +4,19 @@ int execute_command(char **args, char ***envp)
 {
     if (!args[0])
         return 1;
+    if (has_pipe(args)) 
+    {
+        char ***commands = split_by_pipe(args);
+        execute_piped_commands(commands);
+        int i = 0;
+        while (commands[i]) 
+        {
+            free(commands[i]);
+            i++;
+        }
+        free(commands);
+        return 1; 
+    }
     if (strcmp(args[0], "cd") == 0)
         builtin_cd(args);
     else if (strcmp(args[0], "pwd") == 0)

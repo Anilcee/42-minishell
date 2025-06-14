@@ -82,31 +82,85 @@ int handle_heredoc_redirection(char **args, int i)
     return 0;
 }
 
-char ***split_by_pipe(char **args) 
+int has_pipe(char **args) 
 {
-    char ***commands = malloc(sizeof(char **) * 10); 
-    int cmd_idx = 0;
-    //int arg_idx = 0;
     int i = 0;
-    commands[cmd_idx] = malloc(sizeof(char *) * 100);
-    int inner_idx = 0;
+    while (args[i]) 
+    {
+        if (strcmp(args[i], "|") == 0)
+            return 1;
+        i++;
+    }
+    return 0;
+}
+
+int count_commands(char **args) 
+{
+    int count = 1;
+    int i = 0;
+    while (args[i]) 
+    {
+        if (strcmp(args[i], "|") == 0)
+            count++;
+        i++;
+    }
+    return count;
+}
+
+int *count_args_per_command(char **args, int command_count) 
+{
+    int *arg_counts = malloc(sizeof(int) * command_count);
+    int i = 0, cmd_idx = 0;
+    int count = 0;
+
     while (args[i]) 
     {
         if (strcmp(args[i], "|") == 0) 
         {
-            commands[cmd_idx][inner_idx] = NULL; 
-            cmd_idx++;
-            inner_idx = 0;
-            commands[cmd_idx] = malloc(sizeof(char *) * 100);
+            arg_counts[cmd_idx++] = count;
+            count = 0;
         } 
         else 
         {
-            commands[cmd_idx][inner_idx++] = args[i];
+            count++;
         }
         i++;
     }
-    commands[cmd_idx][inner_idx] = NULL;
-    commands[cmd_idx + 1] = NULL; 
+    arg_counts[cmd_idx] = count;
+    return arg_counts;
+}
+
+char ***split_by_pipe(char **args) 
+{
+    int command_count = count_commands(args);
+    int *arg_counts = count_args_per_command(args, command_count);
+    int i = 0;
+    char ***commands = malloc(sizeof(char **) * (command_count + 1));
+    while ( i < command_count) 
+    {
+        commands[i] = malloc(sizeof(char *) * (arg_counts[i] + 1));
+        i++;
+    }
+    commands[command_count] = NULL;
+    i = 0;
+    int cmd_idx = 0, arg_idx = 0;
+    while (args[i]) 
+    {
+        if (strcmp(args[i], "|") == 0) 
+        {
+            commands[cmd_idx][arg_idx] = NULL;
+            cmd_idx++;
+            arg_idx = 0;
+        } 
+        else 
+        {
+            commands[cmd_idx][arg_idx++] = args[i];
+        }
+        i++;
+    }
+    commands[cmd_idx][arg_idx] = NULL;
+
+    free(arg_counts);
     return commands;
 }
 
@@ -141,3 +195,58 @@ int handle_redirections(char **args)
     }
     return 0;
 }
+
+void execute_piped_commands(char ***commands) 
+{
+    int i = 0;
+    int fd[2];
+    int prev_fd = -1;
+
+    while (commands[i] != NULL) 
+    {
+        if (commands[i + 1] != NULL) 
+        {
+            if (pipe(fd) == -1) 
+            {
+                perror("pipe");
+                exit(1);
+            }
+        }
+        pid_t pid = fork();
+        if (pid == -1) 
+        {
+            perror("fork");
+            exit(1);
+        }
+        if (pid == 0) 
+        {
+            if (prev_fd != -1) 
+            {
+                dup2(prev_fd, 0); 
+                close(prev_fd);
+            }
+            if (commands[i + 1]) 
+            {
+                close(fd[0]);         
+                dup2(fd[1], 1);
+                close(fd[1]);
+            }
+            execvp(commands[i][0], commands[i]);
+            perror("execvp");
+            exit(1);
+        } 
+        else
+        {
+            if (prev_fd != -1)
+                close(prev_fd);
+            if (commands[i + 1]) 
+            {
+                close(fd[1]);        
+                prev_fd = fd[0];     
+            }
+            wait(NULL);
+            i++;
+        }
+    }
+}
+

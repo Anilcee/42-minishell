@@ -47,5 +47,10 @@ void builtin_history(char *line);
 char **builtin_export(char *arg, char **env);
 char **copy_env(char **envp);
 int handle_redirections(char **args);
+int *count_args_per_command(char **args, int command_count);
+int count_commands(char **args);
+int has_pipe(char **args);
+void execute_piped_commands(char ***commands) ;
+char ***split_by_pipe(char **args);
 
 #endif
