@@ -1,6 +1,6 @@
 #include "minishell.h"
 
-int execute_command(char **args, char ***envp) 
+int execute_command(char **args, t_command *cmds, char ***envp) 
 {
     if (!args[0])
         return 1;
@@ -17,14 +17,14 @@ int execute_command(char **args, char ***envp)
         free(commands);
         return 1; 
     }
-    if (strcmp(args[0], "cd") == 0)
-        builtin_cd(args);
+    if (strcmp(cmds->args[0], "cd") == 0)
+        builtin_cd(cmds);
     else if (strcmp(args[0], "pwd") == 0)
         builtin_pwd();
     else if (strcmp(args[0], "env") == 0)
         builtin_env(*envp);
-    else if (strcmp(args[0], "echo") == 0)
-        builtin_echo(&args[1]);
+    else if (strcmp(cmds->args[0], "echo") == 0)
+        builtin_echo(cmds);
     else if (strcmp(args[0], "history") == 0)
         builtin_history(NULL);
     else if (strcmp(args[0], "export") == 0)
@@ -74,12 +74,32 @@ int main(int argc, char **argv, char **envp)
         }
         args = ft_split(input,' ');
         t_token *tokens =tokenize(input);
+        t_command *cmds = parse_tokens(tokens);
         while(tokens)
         {
             printf("Token: '%s' - Tip: %d\n", tokens->value, tokens->t_type);
             tokens=tokens->next;
         }
+        t_command *cmd = cmds;
+        while (cmd) 
+        {
+            for (int i = 0; cmd->args && cmd->args[i]; i++)
+                printf("arg[%d]: %s\n", i, cmd->args[i]);
+            if (cmd->infile)
+            printf("infile: %s\n", cmd->infile);
+            if (cmd->outfile)
+            printf("outfile: %s (%s)\n", cmd->outfile, cmd->append ? "append" : "overwrite");
+            if (cmd->heredoc)
+            printf("heredoc aktif\n");
+            cmd = cmd->next;
+        }
+        /*
         if (!execute_command(args, &env))
+        {
+            break;
+        }
+        */
+        if (!execute_command(args,cmds, &env))
         {
             break;
         }

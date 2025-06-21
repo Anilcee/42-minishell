@@ -1,14 +1,16 @@
 #include "minishell.h"
 
-int builtin_cd(char **args) 
+int builtin_cd(t_command *cmd) 
 {
-    if (args[1] == NULL) 
+    if (!cmd || !cmd->args || !cmd->args[1]) 
     {
-        printf("EKSİK");
+        printf("minishell: cd: eksik argüman\n");
+        return 1;
     }
-    else if ( chdir(args[1])!= 0) 
+    if (chdir(cmd->args[1]) != 0) 
     {
-        printf("minishell: %s: %s: No such file or directory\n",args[0],args[1]);
+        printf("minishell: cd: %s: No such file or directory\n", cmd->args[1]);
+        return 1;
     }
     return 0;
 }
@@ -26,25 +28,27 @@ void builtin_pwd()
     }   
 }
 
-void builtin_echo(char** str) 
+void builtin_echo(t_command *cmd)
 {
-    int i;
-    i = 0;
-    if(str[0][0] == '$' && str[0][1] == '$')
+    int i = 1;
+    int newline = 1;
+
+    if (cmd->args[i] && strcmp(cmd->args[i], "-n") == 0)
     {
-        printf("%d\n",getpid());
-        return ;
-    }
-    if(str[0][0]=='-'&&str[0][1]=='n')
-    {
-        i++;   
-    }
-    while(str[i])
-    {
-        printf("%s ",str[i]);
+        newline = 0;
         i++;
     }
-    if(str[0][0]!='-'&&str[0][1]!='n')
+    while (cmd->args[i])
+    {
+        if (strcmp(cmd->args[i], "$$") == 0)
+            printf("%d", getpid());
+        else
+            printf("%s", cmd->args[i]);
+        if (cmd->args[i + 1])
+            printf(" ");
+        i++;
+    }
+    if (newline)
         printf("\n");
 }
 

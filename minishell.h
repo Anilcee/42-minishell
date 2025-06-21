@@ -11,6 +11,16 @@
 # include <signal.h>
 #include <fcntl.h>
 
+
+typedef struct s_command {
+    char **args;             
+    char *infile;             
+    char *outfile;           
+    int append;               
+    int heredoc;              
+    struct s_command *next;   
+} t_command;
+
 typedef enum e_token_type {
 	T_WORD,
 	T_PIPE,
@@ -39,10 +49,10 @@ char	*ft_strdup(const char *s);
 size_t	ft_strlen(const char *s);
 int		external_commands(char **args, char **envp);
 t_token *tokenize(char *input);
-int builtin_cd(char **args);
+int builtin_cd(t_command *cmd);
 void builtin_pwd(void);
 void builtin_env(char **env);
-void builtin_echo(char **args);
+void builtin_echo(t_command *cmd);
 void builtin_history(char *line);
 char **builtin_export(char *arg, char **env);
 char **copy_env(char **envp);
@@ -52,5 +62,7 @@ int count_commands(char **args);
 int has_pipe(char **args);
 void execute_piped_commands(char ***commands) ;
 char ***split_by_pipe(char **args);
+t_command *parse_tokens(t_token *tokens);
+
 
 #endif

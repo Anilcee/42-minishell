@@ -91,6 +91,5 @@ t_token *tokenize(char *input)
             }
         }
     }
-    
     return head;
 }
