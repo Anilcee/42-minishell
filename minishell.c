@@ -1,44 +1,51 @@
 #include "minishell.h"
 
-int execute_command(char **args, t_command *cmds, char ***envp) 
+int execute_command(t_command *cmds, char ***envp, t_env **env_list) 
 {
-    if (!args[0])
+    int saved_stdout;
+    int saved_stdin;
+    if (!cmds || !cmds->args || !cmds->args[0] || !envp || !(*envp) || !env_list || !(*env_list))
         return 1;
-    if (has_pipe(args)) 
+    if (has_pipe(cmds)) 
     {
-        char ***commands = split_by_pipe(args);
-        execute_piped_commands(commands);
-        int i = 0;
-        while (commands[i]) 
-        {
-            free(commands[i]);
-            i++;
-        }
-        free(commands);
+        execute_piped_commands(cmds);
         return 1; 
+    }
+    saved_stdout = dup(STDOUT_FILENO);
+    saved_stdin = dup(STDIN_FILENO);
+    if (handle_redirections(cmds) < 0)
+    {
+        printf("Redirection error\n");
+        return 1;
     }
     if (strcmp(cmds->args[0], "cd") == 0)
         builtin_cd(cmds);
-    else if (strcmp(args[0], "pwd") == 0)
+    else if (strcmp(cmds->args[0], "pwd") == 0)
         builtin_pwd();
-    else if (strcmp(args[0], "env") == 0)
+    else if (strcmp(cmds->args[0], "env") == 0)
         builtin_env(*envp);
     else if (strcmp(cmds->args[0], "echo") == 0)
-        builtin_echo(cmds);
-    else if (strcmp(args[0], "history") == 0)
+        builtin_echo(cmds, *env_list);
+    else if (strcmp(cmds->args[0], "history") == 0)
         builtin_history(NULL);
-    else if (strcmp(args[0], "export") == 0)
-        *envp = builtin_export(args[1], *envp);
-    else if (strcmp(args[0], "exit") == 0)
+    else if (strcmp(cmds->args[0], "unset") == 0)
+        *envp = builtin_unset(cmds, *envp, env_list);
+    else if (strcmp(cmds->args[0], "export") == 0)
+        *envp = builtin_export(cmds, *envp, env_list);
+    else if (strcmp(cmds->args[0], "exit") == 0)
     {
         printf("exit\n");
         return 0;
     }
     else
     {
-        if (!external_commands(args,*envp))
-            printf("minishell: %s: command not found\n", args[0]);
+        if (!external_commands(cmds, *envp))
+            printf("minishell: %s: command not found\n", cmds->args[0]);
     }
+    dup2(saved_stdout, STDOUT_FILENO);
+    dup2(saved_stdin, STDIN_FILENO);
+    close(saved_stdout);
+    close(saved_stdin);
     return 1;
 }
 
@@ -57,8 +64,9 @@ int main(int argc, char **argv, char **envp)
     (void)argv;
     printf("\033[0;31m");
     char *input;
-    char **args;
+    t_env *env_list = NULL;
     char **env = copy_env(envp);
+    env_list = envp_to_list(env);
     signal(SIGINT, sigint_handler);
     while (1) 
     {  
@@ -72,34 +80,9 @@ int main(int argc, char **argv, char **envp)
         {
             builtin_history(input);
         }
-        args = ft_split(input,' ');
         t_token *tokens =tokenize(input);
         t_command *cmds = parse_tokens(tokens);
-        while(tokens)
-        {
-            printf("Token: '%s' - Tip: %d\n", tokens->value, tokens->t_type);
-            tokens=tokens->next;
-        }
-        t_command *cmd = cmds;
-        while (cmd) 
-        {
-            for (int i = 0; cmd->args && cmd->args[i]; i++)
-                printf("arg[%d]: %s\n", i, cmd->args[i]);
-            if (cmd->infile)
-            printf("infile: %s\n", cmd->infile);
-            if (cmd->outfile)
-            printf("outfile: %s (%s)\n", cmd->outfile, cmd->append ? "append" : "overwrite");
-            if (cmd->heredoc)
-            printf("heredoc aktif\n");
-            cmd = cmd->next;
-        }
-        /*
-        if (!execute_command(args, &env))
-        {
-            break;
-        }
-        */
-        if (!execute_command(args,cmds, &env))
+        if (!execute_command(cmds, &env, &env_list))
         {
             break;
         }

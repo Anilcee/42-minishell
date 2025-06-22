@@ -1,71 +1,67 @@
 #include "minishell.h"
 
-void remove_redirection_tokens(char **args, int i) 
+int handle_input_redirection(t_command *cmd)
 {
-    while (args[i + 2]) 
-    {
-        args[i] = args[i + 2];
-        i++;
-    }
-    args[i] = NULL;
-    args[i + 1] = NULL;
-}
-
-int handle_input_redirection(char **args, int i) 
-{
-    if (args[i + 1] == NULL) 
+    if (!cmd->infile)
         return -1;
-    int fd = open(args[i + 1], O_RDONLY);
-    if (fd < 0) return -1;
+    int fd = open(cmd->infile, O_RDONLY);
+    if (fd < 0)
+    {
+        perror(cmd->infile);
+        return -1;
+    }
     dup2(fd, STDIN_FILENO);
     close(fd);
-    remove_redirection_tokens(args, i);
     return 0;
 }
 
-int handle_output_redirection(char **args, int i) 
+int handle_output_redirection(t_command *cmd)
 {
-    if (args[i + 1] == NULL) 
+    if (!cmd->outfile)
         return -1;
-    int fd = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (fd < 0) 
+    int fd = open(cmd->outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0)
+    {
+        perror(cmd->outfile);
         return -1;
+    }
     dup2(fd, STDOUT_FILENO);
     close(fd);
-    remove_redirection_tokens(args, i);
     return 0;
 }
 
-int handle_append_redirection(char **args, int i) 
+int handle_append_redirection(t_command *cmd)
 {
-    if (args[i + 1] == NULL) 
+    if (!cmd->outfile)
         return -1;
-    int fd = open(args[i + 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
-    if (fd < 0) 
+    int fd = open(cmd->outfile, O_WRONLY | O_CREAT | O_APPEND, 0644);
+    if (fd < 0)
+    {
+        perror(cmd->outfile);
         return -1;
+    }
     dup2(fd, STDOUT_FILENO);
     close(fd);
-    remove_redirection_tokens(args, i);
     return 0;
 }
 
-int handle_heredoc_redirection(char **args, int i) 
+int handle_heredoc_redirection(t_command *cmd)
 {
-    if (args[i + 1] == NULL) 
+    if (!cmd->infile || !cmd->heredoc)
         return -1;
-    char *delimiter = args[i + 1];
+    char *delimiter = cmd->infile;
     int pipefd[2];
     if (pipe(pipefd) == -1) 
+    {
+        perror("pipe");
         return -1;
+    }
     char *line = NULL;
     while (1) 
     {
-        write(STDOUT_FILENO, "> ", 2);
-        line = get_next_line(STDIN_FILENO);
-        if (!line) break;
-        int len = strlen(line);
-        if (len > 0 && line[len - 1] == '\n') 
-            line[len - 1] = '\0';
+        line = readline("> ");
+        if (!line)  
+            break;
         if (strcmp(line, delimiter) == 0) 
         {
             free(line);
@@ -78,133 +74,55 @@ int handle_heredoc_redirection(char **args, int i)
     close(pipefd[1]);
     dup2(pipefd[0], STDIN_FILENO);
     close(pipefd[0]);
-    remove_redirection_tokens(args, i);
     return 0;
 }
 
-int has_pipe(char **args) 
+int has_pipe(t_command *cmds) 
 {
-    int i = 0;
-    while (args[i]) 
-    {
-        if (strcmp(args[i], "|") == 0)
-            return 1;
-        i++;
-    }
-    return 0;
+    return cmds && cmds->next != NULL;
 }
 
-int count_commands(char **args) 
+int handle_redirections(t_command *cmd)
 {
-    int count = 1;
-    int i = 0;
-    while (args[i]) 
+    if (cmd->infile)
     {
-        if (strcmp(args[i], "|") == 0)
-            count++;
-        i++;
-    }
-    return count;
-}
-
-int *count_args_per_command(char **args, int command_count) 
-{
-    int *arg_counts = malloc(sizeof(int) * command_count);
-    int i = 0, cmd_idx = 0;
-    int count = 0;
-
-    while (args[i]) 
-    {
-        if (strcmp(args[i], "|") == 0) 
+        if (cmd->heredoc)
         {
-            arg_counts[cmd_idx++] = count;
-            count = 0;
-        } 
-        else 
-        {
-            count++;
+            if (handle_heredoc_redirection(cmd) < 0)
+                return -1;
         }
-        i++;
-    }
-    arg_counts[cmd_idx] = count;
-    return arg_counts;
-}
-
-char ***split_by_pipe(char **args) 
-{
-    int command_count = count_commands(args);
-    int *arg_counts = count_args_per_command(args, command_count);
-    int i = 0;
-    char ***commands = malloc(sizeof(char **) * (command_count + 1));
-    while ( i < command_count) 
-    {
-        commands[i] = malloc(sizeof(char *) * (arg_counts[i] + 1));
-        i++;
-    }
-    commands[command_count] = NULL;
-    i = 0;
-    int cmd_idx = 0, arg_idx = 0;
-    while (args[i]) 
-    {
-        if (strcmp(args[i], "|") == 0) 
+        else
         {
-            commands[cmd_idx][arg_idx] = NULL;
-            cmd_idx++;
-            arg_idx = 0;
-        } 
-        else 
-        {
-            commands[cmd_idx][arg_idx++] = args[i];
+            if (handle_input_redirection(cmd) < 0)
+                return -1;
         }
-        i++;
     }
-    commands[cmd_idx][arg_idx] = NULL;
-
-    free(arg_counts);
-    return commands;
-}
-
-int handle_redirections(char **args) 
-{
-    int i = 0;
-    while (args[i]) {
-        if (strcmp(args[i], "<") == 0) 
+    if (cmd->outfile)
+    {
+        if (cmd->append)
         {
-            if (handle_input_redirection(args, i) < 0) return -1;
-            i = 0;
-        } 
-        else if (strcmp(args[i], ">") == 0) 
+            if (handle_append_redirection(cmd) < 0)
+                return -1;
+        }
+        else
         {
-            if (handle_output_redirection(args, i) < 0) return -1;
-            i = 0;
-        } 
-        else if (strcmp(args[i], ">>") == 0) 
-        {
-            if (handle_append_redirection(args, i) < 0) return -1;
-            i = 0;
-        } 
-        else if (strcmp(args[i], "<<") == 0) 
-        {
-            if (handle_heredoc_redirection(args, i) < 0) return -1;
-            i = 0;
-        } 
-        else 
-        {
-            i++;
+            if (handle_output_redirection(cmd) < 0)
+                return -1;
         }
     }
     return 0;
 }
 
-void execute_piped_commands(char ***commands) 
+void execute_piped_commands(t_command *cmds) 
 {
-    int i = 0;
     int fd[2];
     int prev_fd = -1;
+    pid_t pid;
+    t_command *current = cmds;
 
-    while (commands[i] != NULL) 
+    while (current) 
     {
-        if (commands[i + 1] != NULL) 
+        if (current->next) 
         {
             if (pipe(fd) == -1) 
             {
@@ -212,7 +130,7 @@ void execute_piped_commands(char ***commands)
                 exit(1);
             }
         }
-        pid_t pid = fork();
+        pid = fork();
         if (pid == -1) 
         {
             perror("fork");
@@ -222,31 +140,35 @@ void execute_piped_commands(char ***commands)
         {
             if (prev_fd != -1) 
             {
-                dup2(prev_fd, 0); 
+                dup2(prev_fd, STDIN_FILENO);
                 close(prev_fd);
             }
-            if (commands[i + 1]) 
+            if (current->next) 
             {
                 close(fd[0]);         
-                dup2(fd[1], 1);
+                dup2(fd[1], STDOUT_FILENO);
                 close(fd[1]);
             }
-            execvp(commands[i][0], commands[i]);
+            if (handle_redirections(current) < 0)
+            {
+                perror("Redirection");
+                exit(1);
+            }
+            execvp(current->args[0], current->args);
             perror("execvp");
             exit(1);
         } 
-        else
+        else 
         {
             if (prev_fd != -1)
                 close(prev_fd);
-            if (commands[i + 1]) 
+            if (current->next) 
             {
-                close(fd[1]);        
-                prev_fd = fd[0];     
+                close(fd[1]);
+                prev_fd = fd[0];
             }
             wait(NULL);
-            i++;
+            current = current->next;
         }
     }
 }
-

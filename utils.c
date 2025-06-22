@@ -141,34 +141,35 @@ size_t ft_strlen(const char *s)
     return len;
 }
 
-char	*get_next_line(int fd)
+int	ft_strncmp(const char *s1, const char *s2, size_t n)
 {
-	static char	buffer[BUFFER_SIZE];
-	char		line[70000];
-	static int	buffer_readed;
-	static int 	buffer_pos;
-	int			i;
-
+	size_t	i;
+	if (n == 0)
+		return (0);
 	i = 0;
-	if (fd < 0 || BUFFER_SIZE <= 0)
+	while (s1[i] && s2[i] && s1[i] == s2[i] && i < n - 1)
+		++i;
+	return ((unsigned char)s1[i] - (unsigned char)s2[i]);
+}
+
+char	*ft_strndup(const char *s, size_t n)
+{
+	size_t	i;
+	size_t	len;
+	char	*str;
+
+	len = 0;
+	while (s[len] && len < n)
+		len++;
+	str = (char *)malloc(sizeof(char) * (len + 1));
+	if (!str)
 		return (NULL);
-	while (1)
+	i = 0;
+	while (i < len)
 	{
-		if (buffer_pos >= buffer_readed)
-		{
-			buffer_readed = read(fd, buffer, BUFFER_SIZE);
-			buffer_pos = 0;
-			if (buffer_readed <= 0)
-				break ;
-		}
-		line[i] = buffer[buffer_pos];
-        i++;
-        buffer_pos++;
-		if (line[i - 1] == '\n')
-			break ;
+		str[i] = s[i];
+		i++;
 	}
-	line[i] = '\0';
-	if (i == 0)
-		return (NULL);
-	return (ft_strdup(line));
+	str[i] = '\0';
+	return (str);
 }
