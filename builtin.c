@@ -32,6 +32,7 @@ void builtin_pwd()
 void builtin_echo(t_command *cmd, t_env *env_list)
 {
     int i = 1;
+    int j = 0;
     int newline = 1;
 
     if (cmd->args[i] && strcmp(cmd->args[i], "-n") == 0)
@@ -40,44 +41,51 @@ void builtin_echo(t_command *cmd, t_env *env_list)
         i++;
     }
     while (cmd->args[i])
-    {
-        if (cmd->args[i][0] == '$')
+    {   
+        j = 0;
+        while(cmd->args[i][j])
         {
-            char *key = cmd->args[i] + 1;
-            if (strcmp(key, "$") == 0)
+            if (cmd->args[i][j] == '$' && cmd->quote_type[i] != '\'')
             {
-                printf("%d", getpid());
-            }
-            else
-            {
-                t_env *current = env_list;
-                int found = 0;
-                while (current)
+                char *deger = ft_strndup(cmd->args[i], j);
+                char *key = cmd->args[i] + j + 1;
+                
+                if (strcmp(key, "$") == 0)
                 {
-                    if (strcmp(current->key, key) == 0)
+                    printf("%d", getpid());
+                }
+                else
+                {
+                    t_env *current = env_list;
+                    int found = 0;
+                    while (current)
                     {
-                        printf("%s", current->value);
-                        found = 1;
-                        break;
+                        if (strcmp(current->key, key) == 0)
+                        {
+                            char *yeni = ft_strjoin(deger,current->value);
+                            printf("%s\n", yeni);
+                            found = 1;
+                            return ;
+                        }
+                        current = current->next;
                     }
-                    current = current->next;
-                }
-                if (!found)
-                {
-                    printf("%s", cmd->args[i]);
+                    if (!found)
+                    {
+                        printf("%s\n", deger);
+                        return ;
+                    }
                 }
             }
+            if (cmd->args[i + 1])
+                printf(" ");
+            j++;
         }
-        else
-        {
-            printf("%s", cmd->args[i]);
-        }
-        if (cmd->args[i + 1])
-            printf(" ");
         i++;
     }
     if (newline)
-        printf("\n");
+        printf("%s\n", cmd->args[1]);
+    else
+        printf("%s", cmd->args[2]);   
 }
 
 void builtin_env(char** envp) 

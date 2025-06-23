@@ -34,18 +34,20 @@ t_token_type get_token_type(char *value)
         return T_WORD;
 }
 
-t_token *create_token(char *word) {
+t_token *create_token(char *word, char quote_type) 
+{
     t_token *token = malloc(sizeof(t_token));
     if (!token) return NULL;
     token->value = word;
     token->t_type = get_token_type(word);
+    token->quote_type = quote_type;
     token->next = NULL;
     return token;
 }
 
-void add_token_to_list(t_token **head, t_token **tail, char *word)
+void add_token_to_list(t_token **head, t_token **tail, char *word, char quote_type)
 {
-    t_token *new_token = create_token(word);
+    t_token *new_token = create_token(word,quote_type);
     if (!*head)
         *head = new_token;
     else
@@ -69,7 +71,9 @@ t_token *tokenize(char *input)
     t_token *tail = NULL;
     int start = 0;
     int i = 0;
-    
+    char quote;
+    char *word;
+
     while (input[i])
     {
         while (input[i] && ft_isspace(input[i]))
@@ -80,6 +84,18 @@ t_token *tokenize(char *input)
         
         if (!input[i])
             break;
+        else if (is_quote(input[i]))
+        {
+            quote = input[i];
+            i++;
+            start = i;
+            while (input[i] && input[i] != quote)
+                i++;
+            word = extract_word(input, start, i);
+            add_token_to_list(&head, &tail, word, quote);
+            if (input[i] == quote)
+                i++;
+        }
         else
         {
             while (input[i] && !ft_isspace(input[i]))
@@ -87,7 +103,7 @@ t_token *tokenize(char *input)
             if (i > start)
             {
                 char *word = extract_word(input, start, i);
-                add_token_to_list(&head, &tail, word);
+                add_token_to_list(&head, &tail, word, '\0');
             }
         }
     }

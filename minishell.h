@@ -13,7 +13,8 @@
 
 
 typedef struct s_command {
-    char **args;             
+    char **args;
+    char  *quote_type;          
     char *infile;             
     char *outfile;           
     int append;               
@@ -32,7 +33,8 @@ typedef enum e_token_type {
 
 typedef struct s_token
 {
-	char			*value;
+	char	*value;
+    char    quote_type;
 	struct s_token	*next;
 	t_token_type t_type;
 }	t_token;
