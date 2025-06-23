@@ -75,5 +75,8 @@ void unset_from_env_list(t_env **head, const char *key);
 char **unset_from_envp(char **envp, const char *key);
 char	*ft_strndup(const char *s, size_t n);
 int	ft_strncmp(const char *s1, const char *s2, size_t n);
+int ft_isalnum(char c);
+int ft_strcmp(const char *s1, const char *s2);
+char	*ft_strchr(const char *s, int i);
 
 #endif

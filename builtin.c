@@ -29,63 +29,72 @@ void builtin_pwd()
     }
 }
 
+char *get_env_value(t_env *env, const char *key)
+{
+    while (env)
+    {
+        if (ft_strcmp(env->key, key) == 0)
+            return env->value;
+        env = env->next;
+    }
+    return NULL;
+}
+
 void builtin_echo(t_command *cmd, t_env *env_list)
 {
     int i = 1;
-    int j = 0;
     int newline = 1;
 
-    if (cmd->args[i] && strcmp(cmd->args[i], "-n") == 0)
+    if (cmd->args[i] && ft_strcmp(cmd->args[i], "-n") == 0)
     {
         newline = 0;
         i++;
     }
     while (cmd->args[i])
-    {   
-        j = 0;
-        while(cmd->args[i][j])
+    {
+        if (cmd->quote_type[i] == '\'')
         {
-            if (cmd->args[i][j] == '$' && cmd->quote_type[i] != '\'')
+            printf("%s", cmd->args[i]);
+        }
+        else
+        {
+            int j = 0;
+            while (cmd->args[i][j])
             {
-                char *deger = ft_strndup(cmd->args[i], j);
-                char *key = cmd->args[i] + j + 1;
-                
-                if (strcmp(key, "$") == 0)
+                if (cmd->args[i][j] == '$')
                 {
-                    printf("%d", getpid());
+                    j++;
+                    if (cmd->args[i][j] == '$')
+                    {
+                        printf("%d", getpid());
+                        j++;
+                    }
+                    else
+                    {
+                        int start = j;
+                        while (ft_isalnum(cmd->args[i][j]) || cmd->args[i][j] == '_')
+                            j++;
+                        int len = j - start;
+                        char *key = ft_strndup(cmd->args[i] + start, len);
+                        char *value = get_env_value(env_list, key);
+                        if (value)
+                            printf("%s", value);
+                        free(key);
+                    }
                 }
                 else
                 {
-                    t_env *current = env_list;
-                    int found = 0;
-                    while (current)
-                    {
-                        if (strcmp(current->key, key) == 0)
-                        {
-                            char *yeni = ft_strjoin(deger,current->value);
-                            printf("%s\n", yeni);
-                            found = 1;
-                            return ;
-                        }
-                        current = current->next;
-                    }
-                    if (!found)
-                    {
-                        printf("%s\n", deger);
-                        return ;
-                    }
+                    printf("%c", cmd->args[i][j]);
+                    j++;
                 }
             }
-            if (cmd->args[i + 1])
-                printf(" ");
-            j++;
         }
+        if (cmd->args[i + 1])
+            printf(" ");
         i++;
     }
     if (newline)
-        printf("%s\n", cmd->args[1]);
-    else
-        printf("%s", cmd->args[2]);   
+        printf("\n");
 }
 
 void builtin_env(char** envp) 
@@ -109,7 +118,7 @@ void builtin_history(char *line)
         t_history *new_node = malloc(sizeof(t_history));
         if (!new_node)
             return; 
-        new_node->line = strdup(line);
+        new_node->line = ft_strdup(line);
         new_node->next = NULL;
         if (!head)
         {
@@ -173,7 +182,7 @@ char **copy_env(char **envp)
     char **new_env = malloc(sizeof(char *) * (count + 1));
     while (i < count)
     {
-        new_env[i] = strdup(envp[i]);
+        new_env[i] = ft_strdup(envp[i]);
         i++;
     }
     new_env[i] = NULL;
@@ -222,7 +231,7 @@ t_env *add_env_list(t_env **head, char *input)
 
     if (!input || !head)
         return NULL;
-    equal_sign = strchr(input, '=');
+    equal_sign = ft_strchr(input, '=');
     if (!equal_sign)
         return NULL;
     key_len = equal_sign - input;
@@ -233,7 +242,7 @@ t_env *add_env_list(t_env **head, char *input)
     t_env *current = *head;
     while (current)
     {
-        if (strcmp(current->key, key) == 0)
+        if (ft_strcmp(current->key, key) == 0)
         {
             free(current->value);
             current->value = value;
@@ -274,7 +283,7 @@ t_env *envp_to_list(char **envp)
 
     while (envp[i])
     {
-        equal_sign = strchr(envp[i], '=');
+        equal_sign = ft_strchr(envp[i], '=');
         if (!equal_sign)
             return NULL; 
         key_len = equal_sign - envp[i];
@@ -308,7 +317,7 @@ void unset_from_env_list(t_env **head, const char *key)
 
     while (current)
     {
-        if (strcmp(current->key, key) == 0)
+        if (ft_strcmp(current->key, key) == 0)
         {
             if (prev)
                 prev->next = current->next;

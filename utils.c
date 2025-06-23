@@ -173,3 +173,33 @@ char	*ft_strndup(const char *s, size_t n)
 	str[i] = '\0';
 	return (str);
 }
+int ft_isalnum(char c)
+{
+    if ((c >= 'a' && c <= 'z') ||
+        (c >= 'A' && c <= 'Z') ||
+        (c >= '0' && c <= '9'))
+        return 1;
+    return 0;
+}
+int ft_strcmp(const char *s1, const char *s2)
+{
+    int i = 0;
+
+    while (s1[i] && s2[i] && s1[i] == s2[i])
+        i++;
+
+    return (unsigned char)s1[i] - (unsigned char)s2[i];
+}
+
+char	*ft_strchr(const char *s, int i)
+{
+	while (*s)
+	{
+		if (*s == (char)i)
+			return ((char *)s);
+		s++;
+	}
+	if ((char)i == '\0')
+		return ((char *)s);
+	return (0);
+}
