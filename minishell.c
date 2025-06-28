@@ -77,11 +77,17 @@ int main(int argc, char **argv, char **envp)
             break; 
         }
         if (input != NULL)
-        {
             builtin_history(input);
-        }
         t_token *tokens =tokenize(input);
         t_command *cmds = parse_tokens(tokens);
+        /*int i = 0;
+        while (tokens)
+        {
+            printf("token %d %s  token type: %d  \n",i,tokens->value,tokens->t_type);
+            tokens=tokens->next;
+            i++;
+        }*/
+        
         if (!execute_command(cmds, &env, &env_list))
         {
             break;

@@ -73,39 +73,61 @@ t_token *tokenize(char *input)
     int i = 0;
     char quote;
     char *word;
+    char *combined_word = NULL;
 
     while (input[i])
     {
         while (input[i] && ft_isspace(input[i]))
-        {
             i++;
-        }
-        start = i;
-        
         if (!input[i])
-            break;
-        else if (is_quote(input[i]))
+            break;       
+        combined_word = NULL;
+        while (input[i] && !ft_isspace(input[i]))
         {
-            quote = input[i];
-            i++;
             start = i;
-            while (input[i] && input[i] != quote)
-                i++;
-            word = extract_word(input, start, i);
-            add_token_to_list(&head, &tail, word, quote);
-            if (input[i] == quote)
-                i++;
-        }
-        else
-        {
-            while (input[i] && !ft_isspace(input[i]))
-                i++;
-            if (i > start)
+            
+            if (is_quote(input[i]))
             {
-                char *word = extract_word(input, start, i);
-                add_token_to_list(&head, &tail, word, '\0');
+                quote = input[i];
+                i++;
+                start = i;
+                while (input[i] && input[i] != quote)
+                    i++;
+                word = extract_word(input, start, i);
+                if (combined_word == NULL)
+                    combined_word = ft_strdup(word);
+                else
+                {
+                    char *temp = ft_strjoin(combined_word, word);
+                    free(combined_word);
+                    combined_word = temp;
+                }
+                free(word);
+                if (input[i] == quote)
+                    i++;
+            }
+            else
+            {
+                while (input[i] && !ft_isspace(input[i]) && !is_quote(input[i]))
+                    i++;
+                
+                if (i > start)
+                {
+                    word = extract_word(input, start, i);   
+                    if (combined_word == NULL)
+                        combined_word = ft_strdup(word);
+                    else
+                    {
+                        char *temp = ft_strjoin(combined_word, word);
+                        free(combined_word);
+                        combined_word = temp;
+                    }
+                    free(word);
+                }
             }
         }
+        if (combined_word)
+            add_token_to_list(&head, &tail, combined_word, '\0');
     }
     return head;
 }
