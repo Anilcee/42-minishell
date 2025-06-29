@@ -15,17 +15,19 @@ int builtin_cd(t_command *cmd)
     return 0;
 }
 
-void builtin_pwd() 
+int builtin_pwd() 
 {
     char cwd[4096]; 
 
     if (getcwd(cwd, sizeof(cwd)) != NULL) 
     {
         printf("%s\n", cwd);
+        return (0);
     }
     else 
     {
         perror("minishell: pwd");
+        return (1);
     }
 }
 
@@ -40,7 +42,7 @@ char *get_env_value(t_env *env, const char *key)
     return NULL;
 }
 
-void builtin_echo(t_command *cmd, t_env *env_list)
+int builtin_echo(t_command *cmd, t_env *env_list, t_shell *shell)
 {
     int i = 1;
     int newline = 1;
@@ -69,6 +71,11 @@ void builtin_echo(t_command *cmd, t_env *env_list)
                         printf("%d", getpid());
                         j++;
                     }
+                    else if (cmd->args[i][j] == '?')
+                    {
+                        printf("%d", shell->last_exit_code);
+                        j++;
+                    }
                     else
                     {
                         int start = j;
@@ -95,9 +102,10 @@ void builtin_echo(t_command *cmd, t_env *env_list)
     }
     if (newline)
         printf("\n");
+    return (0);
 }
 
-void builtin_env(char** envp) 
+int builtin_env(char** envp) 
 {
     int i;
 
@@ -107,6 +115,7 @@ void builtin_env(char** envp)
         printf("%s\n", envp[i]);
         i++;
     }
+    return (0);
 }
 
 void builtin_history(char *line)
@@ -361,4 +370,18 @@ char **unset_from_envp(char **envp, const char *key)
     new_envp[j] = NULL;
     free(envp);
     return new_envp;
+}
+int builtin_exit(t_command *cmd)
+{
+    int exit_code;
+    printf("exit\n");
+    if(!cmd->args[1])
+        exit (0);
+    if(!is_num(cmd->args[1]))
+    {
+        printf("minishell: exit: %s: numeric argument required\n", cmd->args[1]);
+        exit (2);
+    }
+    exit_code = atoi(cmd->args[1]) % 256;
+    exit(exit_code);
 }

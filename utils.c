@@ -173,6 +173,24 @@ char	*ft_strndup(const char *s, size_t n)
 	str[i] = '\0';
 	return (str);
 }
+int is_num(char *str)
+{
+    int i = 0;
+    if (!str || !str[0])
+        return 0;
+    if (str[i] == '-' || str[i] == '+')
+        i++;
+    if (!str[i])
+        return 0;
+    while (str[i])
+    {
+        if (!(str[i] >= '0' && str[i] <= '9'))
+            return 0;
+        i++;
+    }
+    return 1;
+}
+
 int ft_isalnum(char c)
 {
     if ((c >= 'a' && c <= 'z') ||

@@ -50,6 +50,12 @@ typedef struct s_env {
     struct s_env *next;
 } t_env;
 
+typedef struct s_shell {
+    int last_exit_code;
+    t_env *env_list;
+    char **envp;
+} t_shell;
+
 char	**ft_split(const char *str, char separator);
 char	*ft_strjoin(char const *s1, char const *s2);
 char	*ft_strdup(const char *s);
@@ -57,9 +63,9 @@ size_t	ft_strlen(const char *s);
 int external_commands(t_command *cmd, char **envp);
 t_token *tokenize(char *input);
 int builtin_cd(t_command *cmd);
-void builtin_pwd(void);
-void builtin_env(char **env);
-void builtin_echo(t_command *cmd, t_env *env_list);
+int builtin_pwd(void);
+int builtin_env(char **env);
+int builtin_echo(t_command *cmd, t_env *env_list, t_shell *shell);
 void builtin_history(char *line);
 char **builtin_export(t_command *cmd, char** envp, t_env **env_list);
 char **copy_env(char **envp);
@@ -75,8 +81,10 @@ void unset_from_env_list(t_env **head, const char *key);
 char **unset_from_envp(char **envp, const char *key);
 char	*ft_strndup(const char *s, size_t n);
 int	ft_strncmp(const char *s1, const char *s2, size_t n);
+int is_num(char *str);
 int ft_isalnum(char c);
 int ft_strcmp(const char *s1, const char *s2);
 char	*ft_strchr(const char *s, int i);
-
+int execute_command(t_command *cmds, t_shell *shell);
+int builtin_exit(t_command *cmd);
 #endif

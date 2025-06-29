@@ -1,10 +1,11 @@
 #include "minishell.h"
 
-int execute_command(t_command *cmds, char ***envp, t_env **env_list) 
+int execute_command(t_command *cmds, t_shell *shell) 
 {
     int saved_stdout;
     int saved_stdin;
-    if (!cmds || !cmds->args || !cmds->args[0] || !envp || !(*envp) || !env_list || !(*env_list))
+    if (!cmds || !cmds->args || !cmds->args[0] || !shell || !shell->envp 
+        || !shell->env_list)
         return 1;
     if (has_pipe(cmds)) 
     {
@@ -16,31 +17,49 @@ int execute_command(t_command *cmds, char ***envp, t_env **env_list)
     if (handle_redirections(cmds) < 0)
     {
         printf("Redirection error\n");
+        shell->last_exit_code = 1;
         return 1;
     }
     if (strcmp(cmds->args[0], "cd") == 0)
-        builtin_cd(cmds);
+        shell->last_exit_code = builtin_cd(cmds);
     else if (strcmp(cmds->args[0], "pwd") == 0)
-        builtin_pwd();
+        shell->last_exit_code = builtin_pwd();
     else if (strcmp(cmds->args[0], "env") == 0)
-        builtin_env(*envp);
+        shell->last_exit_code = builtin_env(shell->envp);
     else if (strcmp(cmds->args[0], "echo") == 0)
-        builtin_echo(cmds, *env_list);
+    {
+        builtin_echo(cmds, shell->env_list, shell);
+        shell->last_exit_code = 0;
+    }
     else if (strcmp(cmds->args[0], "history") == 0)
+    {
         builtin_history(NULL);
+        shell->last_exit_code = 0;
+    }
     else if (strcmp(cmds->args[0], "unset") == 0)
-        *envp = builtin_unset(cmds, *envp, env_list);
+    {
+        shell->envp = builtin_unset(cmds, shell->envp, &shell->env_list);
+        shell->last_exit_code = 0;
+    }
     else if (strcmp(cmds->args[0], "export") == 0)
-        *envp = builtin_export(cmds, *envp, env_list);
+    {
+        shell->envp = builtin_export(cmds, shell->envp, &shell->env_list);
+        shell->last_exit_code = 0;
+    }
     else if (strcmp(cmds->args[0], "exit") == 0)
     {
-        printf("exit\n");
+        builtin_exit(cmds);
         return 0;
     }
     else
     {
-        if (!external_commands(cmds, *envp))
+        if (!external_commands(cmds, shell->envp))
+        {
             printf("minishell: %s: command not found\n", cmds->args[0]);
+            shell->last_exit_code = 127;
+        }
+        else
+            shell->last_exit_code = 0;
     }
     dup2(saved_stdout, STDOUT_FILENO);
     dup2(saved_stdin, STDIN_FILENO);
@@ -64,9 +83,12 @@ int main(int argc, char **argv, char **envp)
     (void)argv;
     printf("\033[0;31m");
     char *input;
-    t_env *env_list = NULL;
-    char **env = copy_env(envp);
-    env_list = envp_to_list(env);
+    t_shell shell;
+    
+    shell.last_exit_code = 0;
+    shell.envp = copy_env(envp);
+    shell.env_list = envp_to_list(shell.envp);
+    
     signal(SIGINT, sigint_handler);
     while (1) 
     {  
@@ -80,15 +102,8 @@ int main(int argc, char **argv, char **envp)
             builtin_history(input);
         t_token *tokens =tokenize(input);
         t_command *cmds = parse_tokens(tokens);
-        /*int i = 0;
-        while (tokens)
-        {
-            printf("token %d %s  token type: %d  \n",i,tokens->value,tokens->t_type);
-            tokens=tokens->next;
-            i++;
-        }*/
         
-        if (!execute_command(cmds, &env, &env_list))
+        if (!execute_command(cmds, &shell))
         {
             break;
         }
