@@ -1,15 +1,22 @@
 #include "minishell.h"
 
-int builtin_cd(t_command *cmd) 
+int builtin_cd(t_command *cmd,t_env *env_list)
 {
-    if (!cmd || !cmd->args || !cmd->args[1]) 
+    char *target_path;
+    if (!cmd || !cmd->args)
+        return 1;
+    if (cmd->args[2])
     {
-        printf("minishell: cd: eksik argüman\n");
+        write(STDERR_FILENO, "minishell: cd: too many arguments\n", 34);
         return 1;
     }
-    if (chdir(cmd->args[1]) != 0) 
+    if(!cmd->args[1])
+        target_path = get_env_value(env_list,"HOME");
+    else
+        target_path=cmd->args[1];
+    if (chdir(target_path) != 0)
     {
-        printf("minishell: cd: %s: No such file or directory\n", cmd->args[1]);
+        write(STDERR_FILENO, "minishell: cd: No such file or directory\n", 41);
         return 1;
     }
     return 0;
@@ -31,18 +38,7 @@ int builtin_pwd()
     }
 }
 
-char *get_env_value(t_env *env, const char *key)
-{
-    while (env)
-    {
-        if (ft_strcmp(env->key, key) == 0)
-            return env->value;
-        env = env->next;
-    }
-    return NULL;
-}
-
-int builtin_echo(t_command *cmd, t_env *env_list, t_shell *shell)
+int builtin_echo(t_command *cmd)
 {
     int i = 1;
     int newline = 1;
@@ -54,48 +50,7 @@ int builtin_echo(t_command *cmd, t_env *env_list, t_shell *shell)
     }
     while (cmd->args[i])
     {
-        if (cmd->quote_type[i] == '\'')
-        {
-            printf("%s", cmd->args[i]);
-        }
-        else
-        {
-            int j = 0;
-            while (cmd->args[i][j])
-            {
-                if (cmd->args[i][j] == '$')
-                {
-                    j++;
-                    if (cmd->args[i][j] == '$')
-                    {
-                        printf("%d", getpid());
-                        j++;
-                    }
-                    else if (cmd->args[i][j] == '?')
-                    {
-                        printf("%d", shell->last_exit_code);
-                        j++;
-                    }
-                    else
-                    {
-                        int start = j;
-                        while (ft_isalnum(cmd->args[i][j]) || cmd->args[i][j] == '_')
-                            j++;
-                        int len = j - start;
-                        char *key = ft_strndup(cmd->args[i] + start, len);
-                        char *value = get_env_value(env_list, key);
-                        if (value)
-                            printf("%s", value);
-                        free(key);
-                    }
-                }
-                else
-                {
-                    printf("%c", cmd->args[i][j]);
-                    j++;
-                }
-            }
-        }
+        printf("%s", cmd->args[i]);
         if (cmd->args[i + 1])
             printf(" ");
         i++;
@@ -163,7 +118,7 @@ char **builtin_export(t_command *cmd, char** envp, t_env **env_list)
         printf("VAR=değer\n");
         return envp;
     }
-    add_env_list(env_list, input);          
+    add_env_list(env_list, input);
     envp = add_envp(envp, input); 
     return envp;
 }
@@ -377,10 +332,16 @@ int builtin_exit(t_command *cmd)
     printf("exit\n");
     if(!cmd->args[1])
         exit (0);
-    if(!is_num(cmd->args[1]))
+    
+    if (!is_num(cmd->args[1]))
     {
-        printf("minishell: exit: %s: numeric argument required\n", cmd->args[1]);
-        exit (2);
+        write(STDERR_FILENO, "minishell: exit: numeric argument required\n", 43);
+        exit(2);
+    }
+    if (cmd->args[2])
+    {
+        write(STDERR_FILENO, "minishell: exit: too many arguments\n", 36);
+        return 1;
     }
     exit_code = atoi(cmd->args[1]) % 256;
     exit(exit_code);

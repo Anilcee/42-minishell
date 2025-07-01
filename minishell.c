@@ -1,6 +1,6 @@
 #include "minishell.h"
 
-int execute_command(t_command *cmds, t_shell *shell) 
+int execute_command(t_command *cmds, t_shell *shell)
 {
     int saved_stdout;
     int saved_stdin;
@@ -21,14 +21,14 @@ int execute_command(t_command *cmds, t_shell *shell)
         return 1;
     }
     if (strcmp(cmds->args[0], "cd") == 0)
-        shell->last_exit_code = builtin_cd(cmds);
+        shell->last_exit_code = builtin_cd(cmds,shell->env_list);
     else if (strcmp(cmds->args[0], "pwd") == 0)
         shell->last_exit_code = builtin_pwd();
     else if (strcmp(cmds->args[0], "env") == 0)
         shell->last_exit_code = builtin_env(shell->envp);
     else if (strcmp(cmds->args[0], "echo") == 0)
     {
-        builtin_echo(cmds, shell->env_list, shell);
+        builtin_echo(cmds);
         shell->last_exit_code = 0;
     }
     else if (strcmp(cmds->args[0], "history") == 0)
@@ -48,14 +48,19 @@ int execute_command(t_command *cmds, t_shell *shell)
     }
     else if (strcmp(cmds->args[0], "exit") == 0)
     {
-        builtin_exit(cmds);
-        return 0;
+        int ret = builtin_exit(cmds);
+        if (ret == 1)
+        {
+            shell->last_exit_code = 1;
+            return 1;
+        }
     }
     else
     {
-        if (!external_commands(cmds, shell->envp))
+       if (!external_commands(cmds, shell->envp))
         {
-            printf("minishell: %s: command not found\n", cmds->args[0]);
+            write(STDERR_FILENO, cmds->args[0], ft_strlen(cmds->args[0]));
+            write(STDERR_FILENO, ": command not found\n", 20);
             shell->last_exit_code = 127;
         }
         else
@@ -100,7 +105,7 @@ int main(int argc, char **argv, char **envp)
         }
         if (input != NULL)
             builtin_history(input);
-        t_token *tokens =tokenize(input);
+        t_token *tokens = tokenize(input, shell.env_list, &shell);
         t_command *cmds = parse_tokens(tokens);
         
         if (!execute_command(cmds, &shell))

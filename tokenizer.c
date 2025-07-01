@@ -65,7 +65,72 @@ char *extract_word(char *input, int start, int end)
     return word;
 }
 
-t_token *tokenize(char *input)
+char *expand_variable(char *input, int *index, t_env *env_list, t_shell *shell)
+{
+    char *result = NULL;
+    (*index)++;
+    
+    if (input[*index] == '$')
+    {
+        (*index)++;
+        int pid = getpid();
+        result = malloc(12);
+        sprintf(result, "%d", pid);
+    }
+    else if (input[*index] == '?')
+    {
+        (*index)++;
+        result = malloc(12);
+        sprintf(result, "%d", shell->last_exit_code);
+    }
+    else if (ft_isalnum(input[*index]) || input[*index] == '_')
+    {
+        int start = *index;
+        while (ft_isalnum(input[*index]) || input[*index] == '_')
+            (*index)++;
+        int len = *index - start;
+        char *key = ft_strndup(input + start, len);
+        char *value = get_env_value(env_list, key);
+        if (value)
+            result = ft_strdup(value);
+        else
+            result = ft_strdup("");
+        free(key);
+    }
+    else
+        result = ft_strdup("$");
+    return result;
+}
+
+char *process_word_with_expansion(char *input, int start, int end, t_env *env_list, t_shell *shell, char quote_type)
+{
+    char *result = ft_strdup("");
+    int i = start;
+    
+    while (i < end)
+    {
+        if (input[i] == '$' && quote_type != '\'')
+        {
+            char *expanded = expand_variable(input, &i, env_list, shell);
+            char *temp = ft_strjoin(result, expanded);
+            free(result);
+            free(expanded);
+            result = temp;
+        }
+        else
+        {
+            char temp_str[2] = {input[i], '\0'};
+            char *temp = ft_strjoin(result, temp_str);
+            free(result);
+            result = temp;
+            i++;
+        }
+    }
+    
+    return result;
+}
+
+t_token *tokenize(char *input, t_env *env_list, t_shell *shell)
 {
     t_token *head = NULL;
     t_token *tail = NULL;
@@ -82,6 +147,8 @@ t_token *tokenize(char *input)
         if (!input[i])
             break;       
         combined_word = NULL;
+        char current_quote_type = '\0';
+        
         while (input[i] && !ft_isspace(input[i]))
         {
             start = i;
@@ -89,11 +156,12 @@ t_token *tokenize(char *input)
             if (is_quote(input[i]))
             {
                 quote = input[i];
+                current_quote_type = quote;
                 i++;
                 start = i;
                 while (input[i] && input[i] != quote)
                     i++;
-                word = extract_word(input, start, i);
+                word = process_word_with_expansion(input, start, i, env_list, shell, quote);
                 if (combined_word == NULL)
                     combined_word = ft_strdup(word);
                 else
@@ -113,7 +181,7 @@ t_token *tokenize(char *input)
                 
                 if (i > start)
                 {
-                    word = extract_word(input, start, i);   
+                    word = process_word_with_expansion(input, start, i, env_list, shell, '\0');
                     if (combined_word == NULL)
                         combined_word = ft_strdup(word);
                     else
@@ -127,7 +195,7 @@ t_token *tokenize(char *input)
             }
         }
         if (combined_word)
-            add_token_to_list(&head, &tail, combined_word, '\0');
+            add_token_to_list(&head, &tail, combined_word, current_quote_type);
     }
     return head;
 }
