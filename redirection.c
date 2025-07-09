@@ -76,6 +76,37 @@ int handle_heredoc_redirection(t_command *cmd)
     close(pipefd[0]);
     return 0;
 }
+void add_pid(t_pid_list **head, pid_t pid)
+{
+    t_pid_list *new_node = malloc(sizeof(t_pid_list));
+    if (!new_node)
+        return;
+    new_node->pid = pid;
+    new_node->next = NULL;
+
+    if (!*head)
+        *head = new_node;
+    else
+    {
+        t_pid_list *temp = *head;
+        while (temp->next)
+            temp = temp->next;
+        temp->next = new_node;
+    }
+}
+void wait_and_free_pids(t_pid_list *head)
+{
+    t_pid_list *temp;
+
+    while (head)
+    {
+        waitpid(head->pid, NULL, 0);
+        temp = head;
+        head = head->next;
+        free(temp);
+    }
+}
+
 
 int has_pipe(t_command *cmds) 
 {
@@ -119,6 +150,7 @@ int execute_piped_commands(t_command *cmds)
     int prev_fd = -1;
     pid_t pid;
     t_command *current = cmds;
+    t_pid_list *pid_list = NULL; // Başlangıçta boş
 
     while (current) 
     {
@@ -130,12 +162,14 @@ int execute_piped_commands(t_command *cmds)
                 exit(1);
             }
         }
+
         pid = fork();
         if (pid == -1) 
         {
             perror("fork");
             exit(1);
         }
+
         if (pid == 0) 
         {
             if (prev_fd != -1) 
@@ -143,23 +177,28 @@ int execute_piped_commands(t_command *cmds)
                 dup2(prev_fd, STDIN_FILENO);
                 close(prev_fd);
             }
+
             if (current->next) 
             {
-                close(fd[0]);         
+                close(fd[0]);
                 dup2(fd[1], STDOUT_FILENO);
                 close(fd[1]);
             }
+
             if (handle_redirections(current) < 0)
             {
                 perror("Redirection");
                 exit(1);
             }
+
             execvp(current->args[0], current->args);
             perror("execvp");
-            exit(1);
+            exit(127);
         } 
         else 
         {
+            add_pid(&pid_list, pid); // Yeni PID’i listeye ekle
+
             if (prev_fd != -1)
                 close(prev_fd);
             if (current->next) 
@@ -167,9 +206,11 @@ int execute_piped_commands(t_command *cmds)
                 close(fd[1]);
                 prev_fd = fd[0];
             }
-            wait(NULL);
+
             current = current->next;
         }
     }
+
+    wait_and_free_pids(pid_list);
     return 0;
 }

@@ -56,6 +56,11 @@ typedef struct s_shell {
     char **envp;
 } t_shell;
 
+typedef struct s_pid_list {
+    pid_t pid;
+    struct s_pid_list *next;
+} t_pid_list;
+
 char	**ft_split(const char *str, char separator);
 char	*ft_strjoin(char const *s1, char const *s2);
 char	*ft_strdup(const char *s);
