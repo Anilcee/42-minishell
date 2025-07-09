@@ -110,30 +110,67 @@ void builtin_history(char *line)
     }
 }
 
-char **builtin_export(t_command *cmd, char** envp, t_env **env_list)
+int is_valid_identifier(const char *str)
+{
+    int i = 0;
+    
+    if (!str || !str[0])
+        return 0;
+    
+    // İlk karakter harf veya _ olmalı
+    if (!((str[0] >= 'a' && str[0] <= 'z') || 
+          (str[0] >= 'A' && str[0] <= 'Z') || 
+          str[0] == '_'))
+        return 0;
+    
+    i = 1;
+    // Sonraki karakterler harf, rakam veya _ olmalı
+    while (str[i] && str[i] != '=')
+    {
+        if (!((str[i] >= 'a' && str[i] <= 'z') || 
+              (str[i] >= 'A' && str[i] <= 'Z') || 
+              (str[i] >= '0' && str[i] <= '9') || 
+              str[i] == '_'))
+            return 0;
+        i++;
+    }
+    return 1;
+}
+
+int builtin_export(t_command *cmd, char*** envp, t_env **env_list)
 {
     char *input = cmd->args[1];
     if (!input)
     {
         printf("VAR=değer\n");
-        return envp;
+        return 0;
     }
+    
+    // Geçerli identifier kontrolü
+    if (!is_valid_identifier(input))
+    {
+        write(STDERR_FILENO, "minishell: export: `", 20);
+        write(STDERR_FILENO, input, ft_strlen(input));
+        write(STDERR_FILENO, "': not a valid identifier\n", 26);
+        return 1;
+    }
+    
     add_env_list(env_list, input);
-    envp = add_envp(envp, input); 
-    return envp;
+    *envp = add_envp(*envp, input); 
+    return 0;
 }
 
-char **builtin_unset(t_command *cmd, char **envp, t_env **env_list)
+int builtin_unset(t_command *cmd, char ***envp, t_env **env_list)
 {
     char *key = cmd->args[1];
     if (!key)
     {
-        printf("unset: missing argument\n");
-        return envp;
+        return 0;  // Bash behavior: unset without args returns 0
     }
+    
     unset_from_env_list(env_list, key);
-    envp = unset_from_envp(envp, key);
-    return envp;
+    *envp = unset_from_envp(*envp, key);
+    return 0;
 }
 
 char **copy_env(char **envp)

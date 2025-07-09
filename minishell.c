@@ -9,7 +9,7 @@ int execute_command(t_command *cmds, t_shell *shell)
         return 1;
     if (has_pipe(cmds)) 
     {
-        execute_piped_commands(cmds);
+        shell->last_exit_code = execute_piped_commands(cmds);
         return 1; 
     }
     saved_stdout = dup(STDOUT_FILENO);
@@ -38,13 +38,11 @@ int execute_command(t_command *cmds, t_shell *shell)
     }
     else if (strcmp(cmds->args[0], "unset") == 0)
     {
-        shell->envp = builtin_unset(cmds, shell->envp, &shell->env_list);
-        shell->last_exit_code = 0;
+        shell->last_exit_code = builtin_unset(cmds, &shell->envp, &shell->env_list);
     }
     else if (strcmp(cmds->args[0], "export") == 0)
     {
-        shell->envp = builtin_export(cmds, shell->envp, &shell->env_list);
-        shell->last_exit_code = 0;
+        shell->last_exit_code = builtin_export(cmds, &shell->envp, &shell->env_list);
     }
     else if (strcmp(cmds->args[0], "exit") == 0)
     {

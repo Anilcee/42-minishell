@@ -113,7 +113,7 @@ int handle_redirections(t_command *cmd)
     return 0;
 }
 
-void execute_piped_commands(t_command *cmds) 
+int execute_piped_commands(t_command *cmds) 
 {
     int fd[2];
     int prev_fd = -1;
@@ -171,4 +171,5 @@ void execute_piped_commands(t_command *cmds)
             current = current->next;
         }
     }
+    return 0;
 }
