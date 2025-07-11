@@ -73,15 +73,13 @@ char *expand_variable(char *input, int *index, t_env *env_list, t_shell *shell)
     if (input[*index] == '$')
     {
         (*index)++;
-        int pid = getpid();
-        result = malloc(12);
-        sprintf(result, "%d", pid);
+        result = ft_itoa(getpid());
     }
+
     else if (input[*index] == '?')
     {
         (*index)++;
-        result = malloc(12);
-        sprintf(result, "%d", shell->last_exit_code);
+        result = ft_itoa(shell->last_exit_code);
     }
     else if (ft_isalnum(input[*index]) || input[*index] == '_')
     {
@@ -130,72 +128,72 @@ char *process_word_with_expansion(char *input, int start, int end, t_env *env_li
     return result;
 }
 
+static void handle_special_chars(char *input, int *i, t_token **head, t_token **tail)
+{
+    int start = *i;
+    char *word;
+
+    if (input[*i] == input[*i + 1])
+    {
+        word = extract_word(input, start, *i + 2);
+        add_token_to_list(head, tail, word, '\0');
+        (*i) += 2;
+    }
+    else
+    {
+        word = extract_word(input, start, *i + 1);
+        add_token_to_list(head, tail, word, '\0');
+        (*i)++;
+    }
+}
+
 t_token *tokenize(char *input, t_env *env_list, t_shell *shell)
 {
     t_token *head = NULL;
     t_token *tail = NULL;
-    int start = 0;
     int i = 0;
-    char quote;
-    char *word;
-    char *combined_word = NULL;
 
     while (input[i])
     {
         while (input[i] && ft_isspace(input[i]))
             i++;
         if (!input[i])
-            break;       
-        combined_word = NULL;
-        char current_quote_type = '\0';
-        
-        while (input[i] && !ft_isspace(input[i]))
+            break;
+
+        if (is_special_char(input[i]))
         {
-            start = i;
-            
+            handle_special_chars(input, &i, &head, &tail);
+            continue;
+        }
+
+        char *combined_word = ft_strdup("");
+        while(input[i] && !ft_isspace(input[i]) && !is_special_char(input[i]))
+        {
+            char *part;
+            int start = i;
             if (is_quote(input[i]))
             {
-                quote = input[i];
-                current_quote_type = quote;
+                char quote = input[i];
                 i++;
                 start = i;
                 while (input[i] && input[i] != quote)
                     i++;
-                word = process_word_with_expansion(input, start, i, env_list, shell, quote);
-                if (combined_word == NULL)
-                    combined_word = ft_strdup(word);
-                else
-                {
-                    char *temp = ft_strjoin(combined_word, word);
-                    free(combined_word);
-                    combined_word = temp;
-                }
-                free(word);
+                part = process_word_with_expansion(input, start, i, env_list, shell, quote);
                 if (input[i] == quote)
                     i++;
             }
             else
             {
-                while (input[i] && !ft_isspace(input[i]) && !is_quote(input[i]))
+                while (input[i] && !ft_isspace(input[i]) && !is_special_char(input[i]) && !is_quote(input[i]))
                     i++;
-                
-                if (i > start)
-                {
-                    word = process_word_with_expansion(input, start, i, env_list, shell, '\0');
-                    if (combined_word == NULL)
-                        combined_word = ft_strdup(word);
-                    else
-                    {
-                        char *temp = ft_strjoin(combined_word, word);
-                        free(combined_word);
-                        combined_word = temp;
-                    }
-                    free(word);
-                }
+                part = process_word_with_expansion(input, start, i, env_list, shell, '\0');
             }
+            char *temp = ft_strjoin(combined_word, part);
+            free(combined_word);
+            free(part);
+            combined_word = temp;
         }
-        if (combined_word)
-            add_token_to_list(&head, &tail, combined_word, current_quote_type);
+        add_token_to_list(&head, &tail, combined_word, '\0');
     }
-    return head;
+    return (head);
 }
