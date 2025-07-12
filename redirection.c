@@ -247,11 +247,30 @@ int execute_piped_commands(t_command *cmds, char **envp)
             
             if (command_name[0] == '/' || command_name[0] == '.')
             {
-                if (access(command_name, X_OK) != 0)
+                if (access(command_name, F_OK) != 0)
                 {
-                    perror("execve");
+                    write(STDERR_FILENO, command_name, ft_strlen(command_name));
+                    write(STDERR_FILENO, ": No such file or directory\n", 28);
                     exit(127);
                 }
+                
+                // Check if it's a directory using opendir
+                DIR *dir = opendir(command_name);
+                if (dir != NULL)
+                {
+                    closedir(dir);
+                    write(STDERR_FILENO, command_name, ft_strlen(command_name));
+                    write(STDERR_FILENO, ": Is a directory\n", 17);
+                    exit(126);
+                }
+                
+                if (access(command_name, X_OK) != 0)
+                {
+                    write(STDERR_FILENO, command_name, ft_strlen(command_name));
+                    write(STDERR_FILENO, ": Permission denied\n", 20);
+                    exit(126);
+                }
+                
                 program_path = ft_strdup(command_name);
             }
             else
@@ -259,7 +278,8 @@ int execute_piped_commands(t_command *cmds, char **envp)
                 char *path_env = getenv("PATH");
                 if (!path_env)
                 {
-                    perror("execve");
+                    write(STDERR_FILENO, command_name, ft_strlen(command_name));
+                    write(STDERR_FILENO, ": command not found\n", 20);
                     exit(127);
                 }
                 char **paths = ft_split(path_env, ':');
@@ -284,7 +304,8 @@ int execute_piped_commands(t_command *cmds, char **envp)
             
             if (!program_path)
             {
-                perror("execve");
+                write(STDERR_FILENO, command_name, ft_strlen(command_name));
+                write(STDERR_FILENO, ": command not found\n", 20);
                 exit(127);
             }
 

@@ -78,6 +78,24 @@ int execute_command(t_command *cmds, t_shell *shell)
             write(STDERR_FILENO, ": command not found\n", 20);
             shell->last_exit_code = 127;
         }
+        else if (external_result == -2)
+        {
+            write(STDERR_FILENO, cmds->args[0], ft_strlen(cmds->args[0]));
+            write(STDERR_FILENO, ": No such file or directory\n", 28);
+            shell->last_exit_code = 127;
+        }
+        else if (external_result == -3)
+        {
+            write(STDERR_FILENO, cmds->args[0], ft_strlen(cmds->args[0]));
+            write(STDERR_FILENO, ": Is a directory\n", 17);
+            shell->last_exit_code = 126;
+        }
+        else if (external_result == -4)
+        {
+            write(STDERR_FILENO, cmds->args[0], ft_strlen(cmds->args[0]));
+            write(STDERR_FILENO, ": Permission denied\n", 20);
+            shell->last_exit_code = 126;
+        }
         else
         {
             shell->last_exit_code = external_result;

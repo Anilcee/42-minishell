@@ -13,8 +13,20 @@ int external_commands(t_command *cmd, char **envp)
         return -1;
     if (command_name[0] == '/' || command_name[0] == '.')
     {
+        if (access(command_name, F_OK) != 0)
+            return -2; // Return -2 for absolute/relative path not found
+        
+        // Check if it's a directory using opendir
+        DIR *dir = opendir(command_name);
+        if (dir != NULL)
+        {
+            closedir(dir);
+            return -3; // Return -3 for directory
+        }
+            
         if (access(command_name, X_OK) != 0)
-            return -1;
+            return -4; // Return -4 for permission denied
+            
         program_path = ft_strdup(command_name);
     }
     else
@@ -37,7 +49,7 @@ int external_commands(t_command *cmd, char **envp)
         }
     }
     if (!program_path)
-        return -1;
+        return -1; // Return -1 for command not found in PATH
     pid = fork();
     if (pid == 0)
     {

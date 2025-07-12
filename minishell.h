@@ -11,6 +11,8 @@
 # include <signal.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <dirent.h>
 
 
 typedef struct s_command {
