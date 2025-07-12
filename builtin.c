@@ -16,7 +16,7 @@ int builtin_cd(t_command *cmd,t_env *env_list)
         target_path=cmd->args[1];
     if (chdir(target_path) != 0)
     {
-        write(STDERR_FILENO, "minishell: cd: No such file or directory\n", 41);
+        write(STDERR_FILENO, "minishell: cd: no such file or directory\n", 41);
         return 1;
     }
     return 0;
@@ -167,7 +167,7 @@ int builtin_unset(t_command *cmd, char ***envp, t_env **env_list)
     {
         return 0;  // Bash behavior: unset without args returns 0
     }
-    
+
     unset_from_env_list(env_list, key);
     *envp = unset_from_envp(*envp, key);
     return 0;

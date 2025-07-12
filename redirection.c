@@ -53,7 +53,6 @@ int handle_heredoc_redirection(t_command *cmd)
     int pipefd[2];
     if (pipe(pipefd) == -1) 
     {
-        perror("pipe");
         return -1;
     }
     char *line = NULL;

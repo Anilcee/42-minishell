@@ -2,6 +2,9 @@
 
 int execute_command(t_command *cmds, t_shell *shell)
 {
+
+
+
     int saved_stdout;
     int saved_stdin;
     if (!cmds || !cmds->args || !cmds->args[0] || !shell || !shell->envp 
@@ -16,7 +19,6 @@ int execute_command(t_command *cmds, t_shell *shell)
     saved_stdin = dup(STDIN_FILENO);
     if (handle_redirections(cmds) < 0)
     {
-        printf("Redirection error\n");
         shell->last_exit_code = 1;
         return 1;
     }
@@ -25,7 +27,10 @@ int execute_command(t_command *cmds, t_shell *shell)
     else if (strcmp(cmds->args[0], "pwd") == 0)
         shell->last_exit_code = builtin_pwd();
     else if (strcmp(cmds->args[0], "env") == 0)
+    {
         shell->last_exit_code = builtin_env(shell->envp);
+    }
+        
     else if (strcmp(cmds->args[0], "echo") == 0)
     {
         builtin_echo(cmds);
@@ -82,9 +87,11 @@ void sigint_handler(int sig)
 
 int main(int argc, char **argv, char **envp)
 {
+
+
     (void)argc;
     (void)argv;
-    printf("\033[0;31m");
+
     char *input;
     t_shell shell;
     
@@ -96,6 +103,7 @@ int main(int argc, char **argv, char **envp)
     while (1) 
     {  
         input = readline("minishell$ ");
+
         if (!input)
         {
             printf("exit\n");
@@ -111,6 +119,6 @@ int main(int argc, char **argv, char **envp)
             break;
         }
     }
-    printf("\033[0m");
+
     return 0;
 }

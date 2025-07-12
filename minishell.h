@@ -9,6 +9,7 @@
 # include <readline/history.h>
 # include <sys/wait.h>
 # include <signal.h>
+#include <errno.h>
 #include <fcntl.h>
 
 

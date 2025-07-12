@@ -65,6 +65,14 @@ t_command *parse_tokens(t_token *tokens)
             tokens = tokens->next;
             if (tokens) 
             {
+                // Eğer önceki bir outfile varsa, onu açıp boş dosya oluştur (bash davranışı)
+                if (current->outfile)
+                {
+                    int fd = open(current->outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                    if (fd >= 0)
+                        close(fd);
+                    free(current->outfile);
+                }
                 current->outfile = ft_strdup(tokens->value);
                 current->append = 0;
             }
@@ -74,6 +82,23 @@ t_command *parse_tokens(t_token *tokens)
             tokens = tokens->next;
             if (tokens) 
             {
+                // Eğer önceki bir outfile varsa, onu açıp boş dosya oluştur (bash davranışı)
+                if (current->outfile)
+                {
+                    if (current->append)
+                    {
+                        int fd = open(current->outfile, O_WRONLY | O_CREAT | O_APPEND, 0644);
+                        if (fd >= 0)
+                            close(fd);
+                    }
+                    else
+                    {
+                        int fd = open(current->outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                        if (fd >= 0)
+                            close(fd);
+                    }
+                    free(current->outfile);
+                }
                 current->outfile = ft_strdup(tokens->value);
                 current->append = 1;
             }

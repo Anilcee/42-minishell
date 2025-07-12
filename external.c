@@ -41,8 +41,12 @@ int external_commands(t_command *cmd, char **envp)
     if (pid == 0)
     {
         execve(program_path, cmd->args, envp);
-        perror("execve");
-        exit(1);
+        if (errno == ENOENT)
+            exit(127); // Komut bulunamadı (bash ile uyumlu)
+        else if (errno == EACCES)
+            exit(126); // Erişim hatası (izin yok)
+        else
+            exit(1);   // Diğer hatalar
     }
     else
     {
