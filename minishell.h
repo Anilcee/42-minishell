@@ -62,6 +62,12 @@ typedef struct s_pid_list {
     struct s_pid_list *next;
 } t_pid_list;
 
+// Custom wait status checking functions
+int ft_wifexited(int status);
+int ft_wexitstatus(int status);
+int ft_wifsignaled(int status);
+int ft_wtermsig(int status);
+
 char	**ft_split(const char *str, char separator);
 char	*ft_strjoin(char const *s1, char const *s2);
 char	*ft_strdup(const char *s);
@@ -80,7 +86,7 @@ int is_valid_identifier(const char *str);
 char **copy_env(char **envp);
 int handle_redirections(t_command *cmd);
 int has_pipe(t_command *cmds);
-int execute_piped_commands(t_command *cmds);
+int execute_piped_commands(t_command *cmds, char **envp);
 t_command *parse_tokens(t_token *tokens);
 t_env *add_env_list(t_env **head, char *input);
 char **add_envp(char **envp, char *input);

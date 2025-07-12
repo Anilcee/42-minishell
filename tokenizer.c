@@ -20,15 +20,15 @@ int is_quote(char c)
 
 t_token_type get_token_type(char *value)
 {
-    if (strcmp(value, "|") == 0)
+    if (ft_strcmp(value, "|") == 0)
         return T_PIPE;
-    else if (strcmp(value, "<") == 0)
+    else if (ft_strcmp(value, "<") == 0)
         return T_REDIRECT_IN;
-    else if (strcmp(value, ">") == 0)
+    else if (ft_strcmp(value, ">") == 0)
         return T_REDIRECT_OUT;
-    else if (strcmp(value, ">>") == 0)
+    else if (ft_strcmp(value, ">>") == 0)
         return T_APPEND;
-    else if (strcmp(value, "<<") == 0)
+    else if (ft_strcmp(value, "<<") == 0)
         return T_HEREDOC;
     else
         return T_WORD;

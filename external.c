@@ -7,20 +7,21 @@ int external_commands(t_command *cmd, char **envp)
     char **paths = NULL;
     char *program_path = NULL;
     char *command_name = cmd->args[0];
+    int status;
 
     if (!command_name)
-        return 0;
+        return -1;
     if (command_name[0] == '/' || command_name[0] == '.')
     {
         if (access(command_name, X_OK) != 0)
-            return 0;
+            return -1;
         program_path = ft_strdup(command_name);
     }
     else
     {
         path_env = getenv("PATH");
         if (!path_env)
-            return 0;
+            return -1;
         paths = ft_split(path_env, ':');
         int i = 0;
         while (paths[i])
@@ -36,7 +37,7 @@ int external_commands(t_command *cmd, char **envp)
         }
     }
     if (!program_path)
-        return 0;
+        return -1;
     pid = fork();
     if (pid == 0)
     {
@@ -50,7 +51,7 @@ int external_commands(t_command *cmd, char **envp)
     }
     else
     {
-        wait(NULL);
+        waitpid(pid, &status, 0);
     }
     free(program_path);
     if (paths)
@@ -60,5 +61,12 @@ int external_commands(t_command *cmd, char **envp)
             free(paths[j++]);
         free(paths);
     }
-    return 1;
+    
+    // Return the actual exit code using custom functions
+    if (ft_wifexited(status))
+        return ft_wexitstatus(status);
+    else if (ft_wifsignaled(status))
+        return 128 + ft_wtermsig(status);
+    else
+        return 1;
 }
