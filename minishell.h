@@ -66,6 +66,7 @@ char	*ft_strjoin(char const *s1, char const *s2);
 char	*ft_strdup(const char *s);
 char	*ft_itoa(int n);
 size_t	ft_strlen(const char *s);
+size_t	ft_strlcpy(char *dst, const char *src, size_t size);
 int external_commands(t_command *cmd, char **envp);
 t_token *tokenize(char *input, t_env *env_list, t_shell *shell);
 int builtin_cd(t_command *cmd,t_env *env_list);

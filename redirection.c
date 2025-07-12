@@ -150,7 +150,7 @@ int execute_piped_commands(t_command *cmds)
     int prev_fd = -1;
     pid_t pid;
     t_command *current = cmds;
-    t_pid_list *pid_list = NULL; // Başlangıçta boş
+    t_pid_list *pid_list = NULL;
 
     while (current) 
     {
@@ -197,7 +197,7 @@ int execute_piped_commands(t_command *cmds)
         } 
         else 
         {
-            add_pid(&pid_list, pid); // Yeni PID’i listeye ekle
+            add_pid(&pid_list, pid);
 
             if (prev_fd != -1)
                 close(prev_fd);

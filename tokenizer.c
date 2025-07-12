@@ -60,8 +60,7 @@ char *extract_word(char *input, int start, int end)
     int len = end - start;
     char *word = malloc(len + 1);
     if (!word) return NULL;
-    strncpy(word, &input[start], len);
-    word[len] = '\0';
+    ft_strlcpy(word, &input[start], len + 1);
     return word;
 }
 

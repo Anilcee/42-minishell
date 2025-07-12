@@ -14,7 +14,7 @@ int external_commands(t_command *cmd, char **envp)
     {
         if (access(command_name, X_OK) != 0)
             return 0;
-        program_path = strdup(command_name);
+        program_path = ft_strdup(command_name);
     }
     else
     {
