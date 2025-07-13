@@ -21,81 +21,7 @@ int ft_wtermsig(int status)
     return (status & 0x7f);
 }
 
-int handle_input_redirection(t_command *cmd)
-{
-    if (!cmd->infile)
-        return -1;
-    int fd = open(cmd->infile, O_RDONLY);
-    if (fd < 0)
-    {
-        perror(cmd->infile);
-        return -1;
-    }
-    dup2(fd, STDIN_FILENO);
-    close(fd);
-    return 0;
-}
 
-int handle_output_redirection(t_command *cmd)
-{
-    if (!cmd->outfile)
-        return -1;
-    int fd = open(cmd->outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (fd < 0)
-    {
-        perror(cmd->outfile);
-        return -1;
-    }
-    dup2(fd, STDOUT_FILENO);
-    close(fd);
-    return 0;
-}
-
-int handle_append_redirection(t_command *cmd)
-{
-    if (!cmd->outfile)
-        return -1;
-    int fd = open(cmd->outfile, O_WRONLY | O_CREAT | O_APPEND, 0644);
-    if (fd < 0)
-    {
-        perror(cmd->outfile);
-        return -1;
-    }
-    dup2(fd, STDOUT_FILENO);
-    close(fd);
-    return 0;
-}
-
-int handle_heredoc_redirection(t_command *cmd)
-{
-    if (!cmd->infile || !cmd->heredoc)
-        return -1;
-    char *delimiter = cmd->infile;
-    int pipefd[2];
-    if (pipe(pipefd) == -1) 
-    {
-        return -1;
-    }
-    char *line = NULL;
-    while (1) 
-    {
-        line = readline("> ");
-        if (!line)  
-            break;
-        if (ft_strcmp(line, delimiter) == 0) 
-        {
-            free(line);
-            break;
-        }
-        write(pipefd[1], line, ft_strlen(line));
-        write(pipefd[1], "\n", 1);
-        free(line);
-    }
-    close(pipefd[1]);
-    dup2(pipefd[0], STDIN_FILENO);
-    close(pipefd[0]);
-    return 0;
-}
 void add_pid(t_pid_list **head, pid_t pid)
 {
     t_pid_list *new_node = malloc(sizeof(t_pid_list));
@@ -133,63 +59,94 @@ int has_pipe(t_command *cmds)
     return cmds && cmds->next != NULL;
 }
 
+int handle_heredoc(const char *delimiter)
+{
+    int pipefd[2];
+    if (pipe(pipefd) == -1)
+    {
+        perror("pipe");
+        return -1;
+    }
+
+    char *line = NULL;
+    while (1)
+    {
+        line = readline("> ");
+        if (!line || ft_strcmp(line, delimiter) == 0)
+        {
+            if(line) free(line);
+            break;
+        }
+        write(pipefd[1], line, ft_strlen(line));
+        write(pipefd[1], "\n", 1);
+        free(line);
+    }
+
+    close(pipefd[1]);
+    return pipefd[0];
+}
+
+
 int handle_redirections(t_command *cmd)
 {
-    int input_fd = -1, output_fd = -1;
-    
-    // Handle input redirection first
-    if (cmd->infile)
+    t_redirect *redir = cmd->redirects;
+    int in_fd = -1;
+    int out_fd = -1;
+
+
+    while (redir)
     {
-        if (cmd->heredoc)
+        if (redir->type == REDIR_IN)
         {
-            if (handle_heredoc_redirection(cmd) < 0)
-                return -1;
-        }
-        else
-        {
-            input_fd = open(cmd->infile, O_RDONLY);
-            if (input_fd < 0)
+            if (in_fd != -1) close(in_fd);
+            in_fd = open(redir->filename, O_RDONLY);
+            if (in_fd < 0)
             {
-                perror(cmd->infile);
+                perror(redir->filename);
+                if (out_fd != -1) close(out_fd);
                 return -1;
             }
         }
-    }
-    
-    // Handle output redirection
-    if (cmd->outfile)
-    {
-        if (cmd->append)
+        else if (redir->type == REDIR_OUT || redir->type == REDIR_APPEND)
         {
-            output_fd = open(cmd->outfile, O_WRONLY | O_CREAT | O_APPEND, 0644);
+            if (out_fd != -1) close(out_fd);
+            int flags = O_WRONLY | O_CREAT;
+            if (redir->type == REDIR_APPEND)
+                flags |= O_APPEND;
+            else
+                flags |= O_TRUNC;
+            out_fd = open(redir->filename, flags, 0644);
+            if (out_fd < 0)
+            {
+                perror(redir->filename);
+                if (in_fd != -1) close(in_fd);
+                return -1;
+            }
         }
-        else
+        else if (redir->type == REDIR_HEREDOC)
         {
-            output_fd = open(cmd->outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (in_fd != -1) close(in_fd);
+            in_fd = handle_heredoc(redir->filename);
+            if (in_fd < 0)
+            {
+                if (out_fd != -1) close(out_fd);
+                return -1;
+            }
         }
-        
-        if (output_fd < 0)
-        {
-            perror(cmd->outfile);
-            if (input_fd >= 0)
-                close(input_fd);
-            return -1;
-        }
+        redir = redir->next;
     }
-    
-    // Only apply redirections if all opens succeeded
-    if (input_fd >= 0)
+
+    if (in_fd != -1)
     {
-        dup2(input_fd, STDIN_FILENO);
-        close(input_fd);
+        dup2(in_fd, STDIN_FILENO);
+        close(in_fd);
     }
-    
-    if (output_fd >= 0)
+    if (out_fd != -1)
     {
-        dup2(output_fd, STDOUT_FILENO);
-        close(output_fd);
+        dup2(out_fd, STDOUT_FILENO);
+        close(out_fd);
     }
-    
+
     return 0;
 }
 

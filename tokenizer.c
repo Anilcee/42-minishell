@@ -165,13 +165,17 @@ t_token *tokenize(char *input, t_env *env_list, t_shell *shell)
             continue;
         }
 
+
         char *combined_word = ft_strdup("");
+        int from_quote = 0;
+
         while(input[i] && !ft_isspace(input[i]) && !is_special_char(input[i]))
         {
             char *part;
             int start = i;
             if (is_quote(input[i]))
             {
+                from_quote = 1;
                 char quote = input[i];
                 i++;
                 start = i;
@@ -192,7 +196,15 @@ t_token *tokenize(char *input, t_env *env_list, t_shell *shell)
             free(part);
             combined_word = temp;
         }
-        add_token_to_list(&head, &tail, combined_word, '\0');
+
+        if (combined_word[0] != '\0' || from_quote)
+        {
+            add_token_to_list(&head, &tail, combined_word, '\0');
+        }
+        else
+        {
+            free(combined_word);
+        }
     }
     return (head);
 }

@@ -15,14 +15,26 @@
 #include <dirent.h>
 
 
-typedef struct s_command {
-    char **args;
-    char  *quote_type;          
-    char *infile;             
-    char *outfile;           
-    int append;               
-    int heredoc;              
-    struct s_command *next;   
+typedef enum e_redirect_type
+{
+	REDIR_IN,
+	REDIR_OUT,
+	REDIR_APPEND,
+	REDIR_HEREDOC
+} t_redirect_type;
+
+typedef struct s_redirect
+{
+	t_redirect_type type;
+	char *filename;
+	struct s_redirect *next;
+} t_redirect;
+
+typedef struct s_command
+{
+	char **args;
+	t_redirect *redirects;
+	struct s_command *next;
 } t_command;
 
 typedef enum e_token_type {
