@@ -53,13 +53,24 @@ int external_commands(t_command *cmd, char **envp)
     pid = fork();
     if (pid == 0)
     {
+        // Dosya var mı?
+        if (access(program_path, F_OK) != 0)
+            exit(127); // Dosya yok
+        
+        // Dizin mi kontrol et - opendir() kullan (izin verilen listede)
+        DIR *dir = opendir(program_path);
+        if (dir != NULL)
+        {
+            closedir(dir);
+            exit(126); // Dizin
+        }
+        
+        // Çalıştırılabilir mi?
+        if (access(program_path, X_OK) != 0)
+            exit(126); // İzin yok
+        
         execve(program_path, cmd->args, envp);
-        if (errno == ENOENT)
-            exit(127); // Komut bulunamadı (bash ile uyumlu)
-        else if (errno == EACCES)
-            exit(126); // Erişim hatası (izin yok)
-        else
-            exit(1);   // Diğer hatalar
+        exit(127); // execve başarısız
     }
     else
     {

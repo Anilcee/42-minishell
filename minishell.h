@@ -117,4 +117,8 @@ int ft_strcmp(const char *s1, const char *s2);
 char	*ft_strchr(const char *s, int i);
 int execute_command(t_command *cmds, t_shell *shell);
 int builtin_exit(t_command *cmd);
+int execute_builtin_in_child(t_command *cmd, t_shell *shell);
+int is_builtin(const char *cmd);
+int	ft_atoi(const char *str);
+void free_env_list(t_env *head);
 #endif

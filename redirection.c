@@ -21,6 +21,45 @@ int ft_wtermsig(int status)
     return (status & 0x7f);
 }
 
+// Helper function for builtin execution in child process
+int execute_builtin_in_child(t_command *cmd, t_shell *shell)
+{
+    if (ft_strcmp(cmd->args[0], "cd") == 0)
+        exit(builtin_cd(cmd, shell->env_list));
+    else if (ft_strcmp(cmd->args[0], "pwd") == 0)
+        exit(builtin_pwd());
+    else if (ft_strcmp(cmd->args[0], "env") == 0)
+        exit(builtin_env(shell->envp));
+    else if (ft_strcmp(cmd->args[0], "echo") == 0)
+    {
+        builtin_echo(cmd);
+        exit(0);
+    }
+    else if (ft_strcmp(cmd->args[0], "export") == 0)
+        exit(builtin_export(cmd, &shell->envp, &shell->env_list));
+    else if (ft_strcmp(cmd->args[0], "unset") == 0)
+        exit(builtin_unset(cmd, &shell->envp, &shell->env_list));
+    else if (ft_strcmp(cmd->args[0], "exit") == 0)
+    {
+        int ret = builtin_exit(cmd);
+        if (ret == 1)
+            exit(1);
+        exit(0);
+    }
+    return 0; // Not a builtin
+}
+
+// Check if command is builtin
+int is_builtin(const char *cmd)
+{
+    return (ft_strcmp(cmd, "cd") == 0 ||
+            ft_strcmp(cmd, "pwd") == 0 ||
+            ft_strcmp(cmd, "env") == 0 ||
+            ft_strcmp(cmd, "echo") == 0 ||
+            ft_strcmp(cmd, "export") == 0 ||
+            ft_strcmp(cmd, "unset") == 0 ||
+            ft_strcmp(cmd, "exit") == 0);
+}
 
 void add_pid(t_pid_list **head, pid_t pid)
 {
@@ -158,6 +197,12 @@ int execute_piped_commands(t_command *cmds, char **envp)
     t_command *current = cmds;
     t_pid_list *pid_list = NULL;
     int final_exit_code = 0;
+    
+    // Create shell structure for builtin commands
+    t_shell shell;
+    shell.envp = envp;
+    shell.env_list = envp_to_list(envp);
+    shell.last_exit_code = 0;
 
     while (current) 
     {
@@ -196,6 +241,12 @@ int execute_piped_commands(t_command *cmds, char **envp)
             if (handle_redirections(current) < 0)
             {
                 exit(1);
+            }
+
+            // Check if it's a builtin command first
+            if (is_builtin(current->args[0]))
+            {
+                execute_builtin_in_child(current, &shell);
             }
 
             // PATH resolution for execve
@@ -293,6 +344,13 @@ int execute_piped_commands(t_command *cmds, char **envp)
     {
         int status;
         waitpid(temp->pid, &status, 0);
+        
+        // Check for SIGPIPE and show "Broken pipe" error
+        if (ft_wifsignaled(status) && ft_wtermsig(status) == SIGPIPE)
+        {
+            write(STDERR_FILENO, "Broken pipe\n", 12);
+        }
+        
         if (temp->next == NULL) // This is the last process
         {
             if (ft_wifexited(status))
@@ -311,5 +369,22 @@ int execute_piped_commands(t_command *cmds, char **envp)
         free(temp);
     }
 
+    // Free the environment list
+    free_env_list(shell.env_list);
+
     return final_exit_code;
+}
+
+// Helper function to free env list
+void free_env_list(t_env *head)
+{
+    t_env *temp;
+    while (head)
+    {
+        temp = head;
+        head = head->next;
+        free(temp->key);
+        free(temp->value);
+        free(temp);
+    }
 }

@@ -47,11 +47,6 @@ int execute_command(t_command *cmds, t_shell *shell)
         builtin_echo(cmds);
         shell->last_exit_code = 0;
     }
-    else if (ft_strcmp(cmds->args[0], "history") == 0)
-    {
-        builtin_history(NULL);
-        shell->last_exit_code = 0;
-    }
     else if (ft_strcmp(cmds->args[0], "unset") == 0)
     {
         shell->last_exit_code = builtin_unset(cmds, &shell->envp, &shell->env_list);

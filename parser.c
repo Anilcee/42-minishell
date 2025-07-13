@@ -93,7 +93,7 @@ t_command *parse_tokens(t_token *tokens)
             else
             {
                 // Syntax error, handle it
-                fprintf(stderr, "minishell: syntax error near unexpected token\n");
+                write(2, "minishell: syntax error near unexpected token\n", 45);
                 // Free allocated memory for commands
                 return NULL; 
             }

@@ -10,13 +10,13 @@ int builtin_cd(t_command *cmd,t_env *env_list)
         write(STDERR_FILENO, "minishell: cd: too many arguments\n", 34);
         return 1;
     }
-    if(!cmd->args[1])
+    if(!cmd->args[1] || ft_strcmp(cmd->args[1],"~") == 0)
         target_path = get_env_value(env_list,"HOME");
     else
         target_path=cmd->args[1];
     if (chdir(target_path) != 0)
     {
-        write(STDERR_FILENO, "minishell: cd: no such file or directory\n", 41);
+        write(STDERR_FILENO, "minishell: cd: No such file or directory\n", 41);
         return 1;
     }
     return 0;
@@ -50,13 +50,13 @@ int builtin_echo(t_command *cmd)
     }
     while (cmd->args[i])
     {
-        printf("%s", cmd->args[i]);
+        write(STDOUT_FILENO, cmd->args[i], ft_strlen(cmd->args[i]));
         if (cmd->args[i + 1])
-            printf(" ");
+            write(STDOUT_FILENO, " ", 1);
         i++;
     }
     if (newline)
-        printf("\n");
+        write(STDOUT_FILENO, "\n", 1);
     return (0);
 }
 
@@ -98,16 +98,6 @@ void builtin_history(char *line)
         count++;
         add_history(line);
     }
-    else
-    {
-        t_history *temp = head;
-        int i = 1;
-        while (temp)
-        {
-            printf("%d %s\n", i++, temp->line);
-            temp = temp->next;
-        }
-    }
 }
 
 int is_valid_identifier(const char *str)
@@ -116,15 +106,12 @@ int is_valid_identifier(const char *str)
     
     if (!str || !str[0])
         return 0;
-    
-    // İlk karakter harf veya _ olmalı
     if (!((str[0] >= 'a' && str[0] <= 'z') || 
           (str[0] >= 'A' && str[0] <= 'Z') || 
           str[0] == '_'))
         return 0;
     
     i = 1;
-    // Sonraki karakterler harf, rakam veya _ olmalı
     while (str[i] && str[i] != '=')
     {
         if (!((str[i] >= 'a' && str[i] <= 'z') || 
@@ -196,7 +183,7 @@ char **add_envp(char **envp, char *input)
     char *equal;
     int key_len;
     i = 0;
-    equal = strchr(input, '=');
+    equal = ft_strchr(input, '=');
     if (!equal)
         return envp;
     key_len = equal - input;
@@ -380,6 +367,6 @@ int builtin_exit(t_command *cmd)
         write(STDERR_FILENO, "minishell: exit: too many arguments\n", 36);
         return 1;
     }
-    exit_code = atoi(cmd->args[1]) % 256;
+    exit_code = ft_atoi(cmd->args[1]) % 256;
     exit(exit_code);
 }

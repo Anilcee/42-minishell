@@ -68,14 +68,8 @@ char *expand_variable(char *input, int *index, t_env *env_list, t_shell *shell)
 {
     char *result = NULL;
     (*index)++;
-    
-    if (input[*index] == '$')
-    {
-        (*index)++;
-        result = ft_itoa(getpid());
-    }
 
-    else if (input[*index] == '?')
+    if (input[*index] == '?')
     {
         (*index)++;
         result = ft_itoa(shell->last_exit_code);
@@ -151,6 +145,7 @@ t_token *tokenize(char *input, t_env *env_list, t_shell *shell)
     t_token *head = NULL;
     t_token *tail = NULL;
     int i = 0;
+    int quote_counter = 0;
 
     while (input[i])
     {
@@ -177,13 +172,17 @@ t_token *tokenize(char *input, t_env *env_list, t_shell *shell)
             {
                 from_quote = 1;
                 char quote = input[i];
+                quote_counter++;
                 i++;
                 start = i;
                 while (input[i] && input[i] != quote)
                     i++;
                 part = process_word_with_expansion(input, start, i, env_list, shell, quote);
                 if (input[i] == quote)
+                {
                     i++;
+                    quote_counter++;
+                }
             }
             else
             {
