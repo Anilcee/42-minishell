@@ -1,4 +1,4 @@
-#include"minishell.h"
+#include "minishell.h"
 
 static int	count_strings(const char *str, char separator)
 {
@@ -133,17 +133,20 @@ char	*ft_strdup(const char *s)
 	return (str);
 }
 
-size_t ft_strlen(const char *s)
+size_t	ft_strlen(const char *s)
 {
-    size_t len = 0;
-    while (s[len] != '\0')
-        len++;
-    return len;
+	size_t	len;
+
+	len = 0;
+	while (s[len] != '\0')
+		len++;
+	return (len);
 }
 
 int	ft_strncmp(const char *s1, const char *s2, size_t n)
 {
 	size_t	i;
+
 	if (n == 0)
 		return (0);
 	i = 0;
@@ -173,51 +176,53 @@ char	*ft_strndup(const char *s, size_t n)
 	str[i] = '\0';
 	return (str);
 }
-char *get_env_value(t_env *env_list, const char *key)
+char	*get_env_value(t_env *env_list, const char *key)
 {
-    while (env_list)
-    {
-        if (ft_strcmp(env_list->key, key) == 0)
-            return env_list->value;
-        env_list = env_list->next;
-    }
-    return NULL;
+	while (env_list)
+	{
+		if (ft_strcmp(env_list->key, key) == 0)
+			return (env_list->value);
+		env_list = env_list->next;
+	}
+	return (NULL);
 }
 
-int is_num(char *str)
+int	is_num(char *str)
 {
-    int i = 0;
-    if (!str || !str[0])
-        return 0;
-    if (str[i] == '-' || str[i] == '+')
-        i++;
-    if (!str[i])
-        return 0;
-    while (str[i])
-    {
-        if (!(str[i] >= '0' && str[i] <= '9'))
-            return 0;
-        i++;
-    }
-    return 1;
+	int	i;
+
+	i = 0;
+	if (!str || !str[0])
+		return (0);
+	if (str[i] == '-' || str[i] == '+')
+		i++;
+	if (!str[i])
+		return (0);
+	while (str[i])
+	{
+		if (!(str[i] >= '0' && str[i] <= '9'))
+			return (0);
+		i++;
+	}
+	return (1);
 }
 
-int ft_isalnum(char c)
+int	ft_isalnum(char c)
 {
-    if ((c >= 'a' && c <= 'z') ||
-        (c >= 'A' && c <= 'Z') ||
-        (c >= '0' && c <= '9'))
-        return 1;
-    return 0;
+	if ((c >= 'a' && c <= 'z') ||
+		(c >= 'A' && c <= 'Z') ||
+		(c >= '0' && c <= '9'))
+		return (1);
+	return (0);
 }
-int ft_strcmp(const char *s1, const char *s2)
+int	ft_strcmp(const char *s1, const char *s2)
 {
-    int i = 0;
+	int	i;
 
-    while (s1[i] && s2[i] && s1[i] == s2[i])
-        i++;
-
-    return (unsigned char)s1[i] - (unsigned char)s2[i];
+	i = 0;
+	while (s1[i] && s2[i] && s1[i] == s2[i])
+		i++;
+	return ((unsigned char)s1[i] - (unsigned char)s2[i]);
 }
 size_t	ft_strlcpy(char *dst, const char *src, size_t size)
 {
