@@ -76,33 +76,54 @@ int	builtin_env(char **envp)
 	return (0);
 }
 
+static void	add_to_history_list(t_history **head, char *line)
+{
+	t_history	*new_node;
+	t_history	*temp;
+
+	new_node = malloc(sizeof(t_history));
+	if (!new_node)
+		return ;
+	new_node->line = ft_strdup(line);
+	new_node->next = NULL;
+	if (!*head)
+		*head = new_node;
+	else
+	{
+		temp = *head;
+		while (temp->next)
+			temp = temp->next;
+		temp->next = new_node;
+	}
+}
+
 void	builtin_history(char *line)
 {
 	static t_history	*head;
 	static int			count;
-	t_history			*new_node;
-	t_history			*temp;
 
 	head = NULL;
 	if (line != NULL)
 	{
-		new_node = malloc(sizeof(t_history));
-		if (!new_node)
-			return ;
-		new_node->line = ft_strdup(line);
-		new_node->next = NULL;
-		if (!head)
-			head = new_node;
-		else
-		{
-			temp = head;
-			while (temp->next)
-				temp = temp->next;
-			temp->next = new_node;
-		}
+		add_to_history_list(&head, line);
 		count++;
 		add_history(line);
 	}
+}
+
+static int	is_valid_first_char(char c)
+{
+	return ((c >= 'a' && c <= 'z') ||
+			(c >= 'A' && c <= 'Z') ||
+			c == '_');
+}
+
+static int	is_valid_identifier_char(char c)
+{
+	return ((c >= 'a' && c <= 'z') ||
+			(c >= 'A' && c <= 'Z') ||
+			(c >= '0' && c <= '9') ||
+			c == '_');
 }
 
 int	is_valid_identifier(const char *str)
@@ -112,17 +133,12 @@ int	is_valid_identifier(const char *str)
 	i = 0;
 	if (!str || !str[0])
 		return (0);
-	if (!((str[0] >= 'a' && str[0] <= 'z') ||
-			(str[0] >= 'A' && str[0] <= 'Z') ||
-			str[0] == '_'))
+	if (!is_valid_first_char(str[0]))
 		return (0);
 	i = 1;
 	while (str[i] && str[i] != '=')
 	{
-		if (!((str[i] >= 'a' && str[i] <= 'z') ||
-				(str[i] >= 'A' && str[i] <= 'Z') ||
-				(str[i] >= '0' && str[i] <= '9') ||
-				str[i] == '_'))
+		if (!is_valid_identifier_char(str[i]))
 			return (0);
 		i++;
 	}
@@ -205,19 +221,11 @@ char	**copy_env(char **envp)
 	return (new_env);
 }
 
-char	**add_envp(char **envp, char *input)
+static char	**replace_existing_env(char **envp, char *input, int key_len)
 {
-	int		i;
-	int		j;
-	char	*equal;
-	int		key_len;
-	char	**new_envp;
+	int	i;
 
 	i = 0;
-	equal = ft_strchr(input, '=');
-	if (!equal)
-		return (envp);
-	key_len = equal - input;
 	while (envp[i])
 	{
 		if (ft_strncmp(envp[i], input, key_len) == 0 && envp[i][key_len] == '=')
@@ -228,60 +236,90 @@ char	**add_envp(char **envp, char *input)
 		}
 		i++;
 	}
-	new_envp = malloc(sizeof(char *) * (i + 2));
+	return (NULL);
+}
+
+static char	**create_new_envp_with_var(char **envp, char *input, int env_count)
+{
+	char	**new_envp;
+	int		j;
+
+	new_envp = malloc(sizeof(char *) * (env_count + 2));
 	j = 0;
-	while (j < i)
+	while (j < env_count)
 	{
 		new_envp[j] = envp[j];
 		j++;
 	}
-	new_envp[i] = ft_strdup(input);
-	new_envp[i + 1] = NULL;
+	new_envp[env_count] = ft_strdup(input);
+	new_envp[env_count + 1] = NULL;
 	free(envp);
 	return (new_envp);
 }
 
-t_env	*add_env_list(t_env **head, char *input)
+char	**add_envp(char **envp, char *input)
+{
+	int		i;
+	char	*equal;
+	int		key_len;
+	char	**result;
+
+	i = 0;
+	equal = ft_strchr(input, '=');
+	if (!equal)
+		return (envp);
+	key_len = equal - input;
+	result = replace_existing_env(envp, input, key_len);
+	if (result)
+		return (result);
+	while (envp[i])
+		i++;
+	return (create_new_envp_with_var(envp, input, i));
+}
+
+static int	parse_env_input(char *input, char **key, char **value)
 {
 	char	*equal_sign;
 	int		key_len;
-	char	*key;
-	char	*value;
-	t_env	*current;
-	t_env	*new_node;
 
-	if (!input || !head)
-		return (NULL);
 	equal_sign = ft_strchr(input, '=');
 	if (!equal_sign)
-		return (NULL);
+		return (0);
 	key_len = equal_sign - input;
-	key = ft_strndup(input, key_len);
-	value = ft_strdup(equal_sign + 1);
-	if (!key || !value)
-		return (NULL);
-	current = *head;
-	while (current)
-	{
-		if (ft_strcmp(current->key, key) == 0)
-		{
-			free(current->value);
-			current->value = value;
-			free(key);
-			return (current);
-		}
-		current = current->next;
-	}
+	*key = ft_strndup(input, key_len);
+	*value = ft_strdup(equal_sign + 1);
+	if (!*key || !*value)
+		return (0);
+	return (1);
+}
+
+static t_env	*update_existing_env_node(t_env *current, char *key, char *value)
+{
+	free(current->value);
+	current->value = value;
+	free(key);
+	return (current);
+}
+
+static t_env	*create_new_env_node(char *key, char *value)
+{
+	t_env	*new_node;
+
 	new_node = malloc(sizeof(t_env));
 	if (!new_node)
-		return NULL;
+		return (NULL);
 	new_node->key = key;
 	new_node->value = value;
 	new_node->next = NULL;
+	return (new_node);
+}
+
+static void	append_env_node(t_env **head, t_env *new_node)
+{
+	t_env	*current;
+
 	if (*head == NULL)
-	{
 		*head = new_node;
-	}
 	else
 	{
 		current = *head;
@@ -289,50 +327,91 @@ t_env	*add_env_list(t_env **head, char *input)
 			current = current->next;
 		current->next = new_node;
 	}
-	return new_node;
 }
 
-t_env	*envp_to_list(char **envp)
+t_env	*add_env_list(t_env **head, char *input)
 {
-	t_env	*head;
+	char	*key;
+	char	*value;
 	t_env	*current;
-	int		i;
+	t_env	*new_node;
+
+	if (!input || !head)
+		return (NULL);
+	if (!parse_env_input(input, &key, &value))
+		return (NULL);
+	current = *head;
+	while (current)
+	{
+		if (ft_strcmp(current->key, key) == 0)
+			return (update_existing_env_node(current, key, value));
+		current = current->next;
+	}
+	new_node = create_new_env_node(key, value);
+	if (!new_node)
+		return (NULL);
+	append_env_node(head, new_node);
+	return (new_node);
+}
+
+static t_env	*create_env_node_from_envp(char *env_str)
+{
 	char	*equal_sign;
 	int		key_len;
 	char	*key;
 	char	*value;
 	t_env	*new_node;
 
+	equal_sign = ft_strchr(env_str, '=');
+	if (!equal_sign)
+		return (NULL);
+	key_len = equal_sign - env_str;
+	key = ft_strndup(env_str, key_len);
+	value = ft_strdup(equal_sign + 1);
+	if (!key || !value)
+		return (NULL);
+	new_node = malloc(sizeof(t_env));
+	if (!new_node)
+		return (NULL);
+	new_node->key = key;
+	new_node->value = value;
+	new_node->next = NULL;
+	return (new_node);
+}
+
+static void	add_env_node_to_list(t_env **head, t_env **current, t_env *new_node)
+{
+	if (!*head)
+	{
+		*head = new_node;
+		*current = new_node;
+	}
+	else
+	{
+		(*current)->next = new_node;
+		*current = new_node;
+	}
+}
+
+t_env	*envp_to_list(char **envp)
+{
+	t_env	*head;
+	t_env	*current;
+	t_env	*new_node;
+	int		i;
+
 	head = NULL;
 	current = NULL;
 	i = 0;
 	while (envp[i])
 	{
-		equal_sign = ft_strchr(envp[i], '=');
-		if (!equal_sign)
-			return NULL;
-		key_len = equal_sign - envp[i];
-		key = ft_strndup(envp[i], key_len);
-		value = ft_strdup(equal_sign + 1);
-		if (!key || !value)
-			return NULL;
-		new_node = malloc(sizeof(t_env));
-		new_node->key = key;
-		new_node->value = value;
-		new_node->next = NULL;
-		if (!head)
-		{
-			head = new_node;
-			current = new_node;
-		}
-		else
-		{
-			current->next = new_node;
-			current = new_node;
-		}
+		new_node = create_env_node_from_envp(envp[i]);
+		if (!new_node)
+			return (NULL);
+		add_env_node_to_list(&head, &current, new_node);
 		i++;
 	}
-	return head;
+	return (head);
 }
 
 void	unset_from_env_list(t_env **head, const char *key)
@@ -360,21 +439,14 @@ void	unset_from_env_list(t_env **head, const char *key)
 	}
 }
 
-char	**unset_from_envp(char **envp, const char *key)
+static void	copy_non_matching_env(char **envp, char **new_envp,
+		const char *key, int key_len)
 {
-	int		i;
-	int		j;
-	int		count;
-	int		key_len;
-	char	**new_envp;
+	int	i;
+	int	j;
 
 	i = 0;
 	j = 0;
-	count = 0;
-	key_len = ft_strlen(key);
-	while (envp[count])
-		count++;
-	new_envp = malloc(sizeof(char *) * (count + 1));
 	while (envp[i])
 	{
 		if (!(ft_strncmp(envp[i], key, key_len) == 0
@@ -390,6 +462,20 @@ char	**unset_from_envp(char **envp, const char *key)
 		i++;
 	}
 	new_envp[j] = NULL;
+}
+
+char	**unset_from_envp(char **envp, const char *key)
+{
+	int		count;
+	int		key_len;
+	char	**new_envp;
+
+	count = 0;
+	key_len = ft_strlen(key);
+	while (envp[count])
+		count++;
+	new_envp = malloc(sizeof(char *) * (count + 1));
+	copy_non_matching_env(envp, new_envp, key, key_len);
 	free(envp);
-	return new_envp;
+	return (new_envp);
 }

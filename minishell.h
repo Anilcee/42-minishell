@@ -80,6 +80,12 @@ typedef struct s_pid_list
 	struct s_pid_list	*next;
 }						t_pid_list;
 
+typedef struct s_pipe_data
+{
+	int					prev_fd;
+	int					fd[2];
+}						t_pipe_data;
+
 int						ft_wifexited(int status);
 int						ft_wexitstatus(int status);
 int						ft_wifsignaled(int status);
@@ -123,9 +129,15 @@ int						ft_strcmp(const char *s1, const char *s2);
 char					*ft_strchr(const char *s, int i);
 int						execute_command(t_command *cmds, t_shell *shell);
 int						builtin_exit(t_command *cmd);
-int						execute_builtin_in_child(t_command *cmd,
-							t_shell *shell);
+int	execute_builtin_in_child(t_command *cmd,
+								t_shell *shell);
 int						is_builtin(const char *cmd);
 int						ft_atoi(const char *str);
 void					free_env_list(t_env *head);
+int						check_absolute_path(char *command_name);
+char					*find_in_path(char *command_name);
+int						execute_child_process(char *program_path,
+							t_command *cmd, char **envp);
+void					free_paths_array(char **paths);
+int						get_exit_status(int status);
 #endif
