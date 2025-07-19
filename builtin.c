@@ -235,40 +235,89 @@ void	print_export_error(char *input)
 	write(STDERR_FILENO, "': not a valid identifier\n", 26);
 }
 
+static t_env	*create_env_node_from_envp(char *env_str)
+{
+	char	*equal_sign;
+	int		key_len;
+	char	*key;
+	char	*value;
+	t_env	*new_node;
+
+	equal_sign = ft_strchr(env_str, '=');
+	if (!equal_sign)
+		return (NULL);
+	key_len = equal_sign - env_str;
+	key = ft_strndup(env_str, key_len);
+	value = ft_strdup(equal_sign + 1);
+	if (!key || !value)
+		return (NULL);
+	new_node = malloc(sizeof(t_env));
+	if (!new_node)
+		return (NULL);
+	new_node->key = key;
+	new_node->value = value;
+	new_node->next = NULL;
+	return (new_node);
+}
+
 static int	compare_strings(const void *a, const void *b)
 {
 	return (ft_strcmp(*(const char **)a, *(const char **)b));
 }
 
-void	print_exported_vars(char **envp)
+void	print_exported_vars(t_env *env_list)
 {
 	int		i;
 	int		count;
 	char	**sorted_env;
-
+	t_env	*temp = env_list;
+	t_env	*temp2 = env_list;
 	count = 0;
-	while (envp[count])
+
+	// Env listesi içindeki elemanları say
+	while (temp && temp->key)
+	{
 		count++;
-	
+		temp = temp->next;
+	}
+
+	// Bellek tahsisi
 	sorted_env = malloc(sizeof(char *) * count);
 	i = 0;
+
+	// Sorted_env dizisini doldur
 	while (i < count)
 	{
-		sorted_env[i] = envp[i];
+		sorted_env[i] = ft_strjoin(env_list->key, "=");  // Key + "=" birleştir
+		char *temp_value = ft_strjoin(sorted_env[i], env_list->value);  // Değerle birleştir
+		free(sorted_env[i]);  // Önceki string'i serbest bırak
+		sorted_env[i] = temp_value;  // Yeni birleştirilen string'i at
+
 		i++;
+		env_list = env_list->next;
 	}
-	
+
+	// Sıralama işlemi
 	qsort(sorted_env, count, sizeof(char *), compare_strings);
-	
+
+	// sorted_env içindeki her öğeyi bir t_env listesine dönüştür
 	i = 0;
-	while (i < count)
+	t_env *sorted = envp_to_list(sorted_env);
+	temp2 = sorted;
+
+	// Sorted listeyi yazdır
+	while (i < count && sorted)
 	{
-		printf("declare -x %s\n", sorted_env[i]);
+		printf("declare -x %s=\"%s\"\n", sorted->key, sorted->value);
+		sorted = sorted->next;
 		i++;
 	}
-	
-	free(sorted_env);
+
+	// Bellek serbest bırakma
+	free_env_list(temp2);   // Env listesi serbest bırak
+	free(sorted_env);        // sorted_env dizisini serbest bırak
 }
+
 
 int	export_single_var(char *arg, char ***envp, t_env **env_list)
 {
@@ -319,7 +368,7 @@ int	builtin_export(t_command *cmd, char ***envp, t_env **env_list)
 
 	if (!cmd->args[1])
 	{
-		print_exported_vars(*envp);
+		print_exported_vars(*env_list);
 		return (0);
 	}
 	
@@ -529,30 +578,7 @@ t_env	*add_env_list(t_env **head, char *input)
 	return (new_node);
 }
 
-static t_env	*create_env_node_from_envp(char *env_str)
-{
-	char	*equal_sign;
-	int		key_len;
-	char	*key;
-	char	*value;
-	t_env	*new_node;
 
-	equal_sign = ft_strchr(env_str, '=');
-	if (!equal_sign)
-		return (NULL);
-	key_len = equal_sign - env_str;
-	key = ft_strndup(env_str, key_len);
-	value = ft_strdup(equal_sign + 1);
-	if (!key || !value)
-		return (NULL);
-	new_node = malloc(sizeof(t_env));
-	if (!new_node)
-		return (NULL);
-	new_node->key = key;
-	new_node->value = value;
-	new_node->next = NULL;
-	return (new_node);
-}
 
 static void	add_env_node_to_list(t_env **head, t_env **current, t_env *new_node)
 {

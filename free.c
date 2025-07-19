@@ -68,35 +68,30 @@ void	free_commands(t_command *head)
 	}
 }
 
-void	free_env_list(t_env *head)
+void free_env_list(t_env *env_list)
 {
-	t_env	*temp;
+    t_env *temp;
 
-	while (head)
-	{
-		temp = head;
-		head = head->next;
-		if (temp->key)
-			free(temp->key);
-		if (temp->value)
-			free(temp->value);
-		free(temp);
-	}
+    while (env_list) {
+        temp = env_list;
+        env_list = env_list->next;
+        free(temp->key);    // Anahtarları serbest bırak
+        free(temp->value);  // Değerleri serbest bırak
+        free(temp);         // Liste elemanlarını serbest bırak
+    }
 }
 
-void	free_envp_array(char **envp)
+void free_envp_array(char **envp)
 {
-	int	i;
+    int i = 0;
 
-	if (!envp)
-		return ;
-	i = 0;
-	while (envp[i])
-	{
-		free(envp[i]);
-		i++;
-	}
-	free(envp);
+    if (envp) {
+        while (envp[i]) {
+            free(envp[i]);  // Her bir string'i serbest bırak
+            i++;
+        }
+        free(envp);  // envp dizisinin kendisini de serbest bırak
+    }
 }
 
 void	free_shell(t_shell *shell)
@@ -108,7 +103,6 @@ void	free_shell(t_shell *shell)
 	if (shell->envp)
 		free_envp_array(shell->envp);
 	shell->env_list = NULL;
-	shell->envp = NULL;
 	shell->last_exit_code = 0;
 }
 

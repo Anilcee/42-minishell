@@ -148,7 +148,6 @@ int	execute_command(t_command *cmds, t_shell *shell)
 	if (has_pipe(cmds))
 	{
 		shell->last_exit_code = execute_piped_commands(cmds, shell->envp);
-		// Pipe sonrası history temizle
 		cleanup_history();
 		return (1);
 	}
@@ -192,7 +191,6 @@ int	process_input(char *input, t_shell *shell)
 	t_token		*tokens;
 	t_command	*cmds;
 	int			result;
-
 	if (!input)
 	{
 		printf("exit\n");
@@ -230,10 +228,8 @@ int	main(int argc, char **argv, char **envp)
 			break ;
 	}
 	exit_code = shell.last_exit_code;
-	
-	// Belleği temizle
+
 	cleanup_history();
 	free_shell(&shell);
-	
 	return (exit_code);
 }
