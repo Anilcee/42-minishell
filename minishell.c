@@ -18,7 +18,7 @@ void	setup_signals(void)
 	signal(SIGQUIT, SIG_IGN);
 }
 
-void	execute_builtin(t_command *cmds, t_shell *shell)
+int	execute_builtin(t_command *cmds, t_shell *shell)
 {
 	int	ret;
 
@@ -44,39 +44,48 @@ void	execute_builtin(t_command *cmds, t_shell *shell)
 		ret = builtin_exit(cmds);
 		if (ret == 1)
 			shell->last_exit_code = 1;
+		else if (ret == -1)
+		{
+			// shell->last_exit_code'u değiştirme, mevcut değeri koru
+			return (-1); // Exit talebi
+		}
+		else if (ret == -2)
+		{
+			shell->last_exit_code = 2;
+			return (-1); // Exit talebi
+		}
+		else if (ret <= -3)
+		{
+			shell->last_exit_code = (-ret - 3);
+			return (-1); // Exit talebi
+		}
 	}
+	return (0); // Normal devam
+}
+
+void	print_error_message(char *cmd_name, char *error_msg, int exit_code, t_shell *shell)
+{
+	write(STDERR_FILENO, cmd_name, ft_strlen(cmd_name));
+	write(STDERR_FILENO, error_msg, ft_strlen(error_msg));
+	shell->last_exit_code = exit_code;
 }
 
 void	handle_external_error(t_command *cmds, int result, t_shell *shell)
 {
-	if (result == -1)
-	{
-		write(STDERR_FILENO, cmds->args[0], ft_strlen(cmds->args[0]));
-		write(STDERR_FILENO, ": command not found\n", 20);
-		shell->last_exit_code = 127;
-	}
-	else if (result == -2)
-	{
-		write(STDERR_FILENO, cmds->args[0], ft_strlen(cmds->args[0]));
-		write(STDERR_FILENO, ": No such file or directory\n", 28);
-		shell->last_exit_code = 127;
-	}
+	if (result == CMD_NOT_FOUND)
+		print_error_message(cmds->args[0], ": command not found\n", 127, shell);
+	else if (result == FILE_NOT_FOUND)
+		print_error_message(cmds->args[0], ": No such file or directory\n", 127, shell);
+	else if (result == PATH_NOT_SET)
+		print_error_message(cmds->args[0], ": No such file or directory\n", 127, shell);
 }
 
 void	handle_external_error2(t_command *cmds, int result, t_shell *shell)
 {
-	if (result == -3)
-	{
-		write(STDERR_FILENO, cmds->args[0], ft_strlen(cmds->args[0]));
-		write(STDERR_FILENO, ": Is a directory\n", 17);
-		shell->last_exit_code = 126;
-	}
-	else if (result == -4)
-	{
-		write(STDERR_FILENO, cmds->args[0], ft_strlen(cmds->args[0]));
-		write(STDERR_FILENO, ": Permission denied\n", 20);
-		shell->last_exit_code = 126;
-	}
+	if (result == IS_DIRECTORY)
+		print_error_message(cmds->args[0], ": Is a directory\n", 126, shell);
+	else if (result == PERMISSION_DENIED)
+		print_error_message(cmds->args[0], ": Permission denied\n", 126, shell);
 }
 
 int	setup_redirections(t_command *cmds, int *saved_stdout, int *saved_stdin)
@@ -106,7 +115,7 @@ int	execute_external_cmd(t_command *cmds, t_shell *shell)
 {
 	int	external_result;
 
-	external_result = external_commands(cmds, shell->envp);
+	external_result = external_commands(cmds, shell);
 	if (external_result < 0)
 	{
 		handle_external_error(cmds, external_result, shell);
@@ -139,6 +148,8 @@ int	execute_command(t_command *cmds, t_shell *shell)
 	if (has_pipe(cmds))
 	{
 		shell->last_exit_code = execute_piped_commands(cmds, shell->envp);
+		// Pipe sonrası history temizle
+		cleanup_history();
 		return (1);
 	}
 	if (!setup_redirections(cmds, &saved_stdout, &saved_stdin))
@@ -147,7 +158,13 @@ int	execute_command(t_command *cmds, t_shell *shell)
 		return (1);
 	}
 	if (is_builtin(cmds->args[0]))
-		execute_builtin(cmds, shell);
+	{
+		if (execute_builtin(cmds, shell) == -1)
+		{
+			restore_redirections(saved_stdout, saved_stdin);
+			return (0); // Exit talebi
+		}
+	}
 	else
 		execute_external_cmd(cmds, shell);
 	restore_redirections(saved_stdout, saved_stdin);
@@ -184,12 +201,14 @@ int	process_input(char *input, t_shell *shell)
 	handle_signal_interrupt(shell);
 	if (input && *input)
 		builtin_history(input);
-	tokens = tokenize(input, shell->env_list, shell);
+	tokens = tokenize(input, shell);
 	cmds = parse_tokens(tokens);
-	result = execute_command(cmds, shell);
-	// TODO: Belleği temizle
-	// free_tokens(tokens);
-	// free_commands(cmds);
+	if (cmds)
+		result = execute_command(cmds, shell);
+	else
+		result = 1;
+	free_tokens(tokens);
+	free_commands(cmds);
 	free(input);
 	return (result);
 }
@@ -198,6 +217,7 @@ int	main(int argc, char **argv, char **envp)
 {
 	char		*input;
 	t_shell		shell;
+	int			exit_code;
 
 	(void)argc;
 	(void)argv;
@@ -209,5 +229,11 @@ int	main(int argc, char **argv, char **envp)
 		if (!process_input(input, &shell))
 			break ;
 	}
-	return (shell.last_exit_code);
+	exit_code = shell.last_exit_code;
+	
+	// Belleği temizle
+	cleanup_history();
+	free_shell(&shell);
+	
+	return (exit_code);
 }

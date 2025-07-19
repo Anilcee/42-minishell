@@ -254,16 +254,13 @@ static void	cleanup_paths_array(char **paths)
 
 static char	*search_in_paths(char *command_name, char **paths)
 {
-	char	*temp;
 	char	*program_path;
 	int		i;
 
 	i = 0;
 	while (paths[i])
 	{
-		temp = ft_strjoin(paths[i], "/");
-		program_path = ft_strjoin(temp, command_name);
-		free(temp);
+		program_path = build_path(paths[i], command_name);
 		if (access(program_path, X_OK) == 0)
 			return (program_path);
 		free(program_path);
@@ -273,15 +270,33 @@ static char	*search_in_paths(char *command_name, char **paths)
 	return (NULL);
 }
 
-static char	*resolve_path_command(char *command_name)
+static char	*resolve_path_command(char *command_name, t_shell *shell)
 {
 	char	*path_env;
 	char	**paths;
 	char	*program_path;
+	int		i;
 
-	path_env = getenv("PATH");
+	if (shell->env_list)
+		path_env = get_env_value(shell->env_list, "PATH");
+	else
+	{
+		// Pipe'da env_list NULL olabilir, envp'den PATH'i al
+		path_env = NULL;
+		i = 0;
+		while (shell->envp && shell->envp[i])
+		{
+			if (ft_strncmp(shell->envp[i], "PATH=", 5) == 0)
+			{
+				path_env = shell->envp[i] + 5;
+				break;
+			}
+			i++;
+		}
+	}
+	
 	if (!path_env)
-		print_error_and_exit(command_name, ": command not found\n", 127);
+		print_error_and_exit(command_name, ": No such file or directory\n", 127);
 	paths = ft_split(path_env, ':');
 	program_path = search_in_paths(command_name, paths);
 	cleanup_paths_array(paths);
@@ -290,12 +305,12 @@ static char	*resolve_path_command(char *command_name)
 	return (program_path);
 }
 
-static char	*resolve_command_path(char *command_name)
+static char	*resolve_command_path(char *command_name, t_shell *shell)
 {
 	if (command_name[0] == '/' || command_name[0] == '.')
 		return (validate_absolute_path(command_name));
 	else
-		return (resolve_path_command(command_name));
+		return (resolve_path_command(command_name, shell));
 }
 
 static void	setup_child_pipes(int prev_fd, int *fd, t_command *current)
@@ -323,7 +338,7 @@ static void	run_child_command(t_command *current, t_shell *shell, char **envp)
 	if (is_builtin(current->args[0]))
 		execute_builtin_in_child(current, shell);
 	command_name = current->args[0];
-	program_path = resolve_command_path(command_name);
+	program_path = resolve_command_path(command_name, shell);
 	execve(program_path, current->args, envp);
 	free(program_path);
 	perror("execve");
@@ -355,7 +370,7 @@ static t_shell	init_shell_for_pipe(char **envp)
 	t_shell	shell;
 
 	shell.envp = envp;
-	shell.env_list = envp_to_list(envp);
+	shell.env_list = NULL; // Pipe'da env_list kullanmıyoruz, leak yaratmasın
 	shell.last_exit_code = 0;
 	return (shell);
 }
@@ -432,7 +447,8 @@ static void	cleanup_resources(t_pid_list *pid_list, t_shell shell)
 		pid_list = pid_list->next;
 		free(temp);
 	}
-	free_env_list(shell.env_list);
+	if (shell.env_list)
+		free_env_list(shell.env_list);
 }
 
 int	execute_piped_commands(t_command *cmds, char **envp)
@@ -457,18 +473,4 @@ int	execute_piped_commands(t_command *cmds, char **envp)
 	final_exit_code = wait_for_all_processes(pid_list);
 	cleanup_resources(pid_list, shell);
 	return (final_exit_code);
-}
-
-void	free_env_list(t_env *head)
-{
-	t_env	*temp;
-
-	while (head)
-	{
-		temp = head;
-		head = head->next;
-		free(temp->key);
-		free(temp->value);
-		free(temp);
-	}
 }

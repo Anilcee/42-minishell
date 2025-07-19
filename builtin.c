@@ -5,16 +5,19 @@ int	builtin_cd(t_command *cmd, t_env *env_list)
 	char	*target_path;
 	char	*current_pwd;
 	char	*old_pwd;
+	int		argc;
 
 	if (!cmd || !cmd->args)
 		return (1);
-	if (cmd->args[2])
+	argc = 0;
+	while (cmd->args[argc])
+		argc++;
+	
+	if (argc > 2)
 	{
 		write(STDERR_FILENO, "minishell: cd: too many arguments\n", 34);
 		return (1);
 	}
-	
-	// Mevcut PWD'yi kaydet (OLDPWD için)
 	current_pwd = getcwd(NULL, 0);
 	
 	if (!cmd->args[1] || ft_strcmp(cmd->args[1], "~") == 0)
@@ -28,7 +31,6 @@ int	builtin_cd(t_command *cmd, t_env *env_list)
 			free(current_pwd);
 			return (1);
 		}
-		// cd - yapınca hedef dizini yazdır
 		write(STDOUT_FILENO, target_path, ft_strlen(target_path));
 		write(STDOUT_FILENO, "\n", 1);
 	}
@@ -37,17 +39,47 @@ int	builtin_cd(t_command *cmd, t_env *env_list)
 	
 	if (chdir(target_path) != 0)
 	{
-		write(STDERR_FILENO, "minishell: cd: No such file or directory\n", 41);
+		struct stat	path_stat;
+		
+		if (stat(target_path, &path_stat) == 0)
+		{
+			if (S_ISREG(path_stat.st_mode))
+			{
+				write(STDERR_FILENO, "minishell: cd: ", 15);
+				write(STDERR_FILENO, target_path, ft_strlen(target_path));
+				write(STDERR_FILENO, ": Not a directory\n", 18);
+			}
+			else if (S_ISDIR(path_stat.st_mode))
+			{
+				write(STDERR_FILENO, "minishell: cd: ", 15);
+				write(STDERR_FILENO, target_path, ft_strlen(target_path));
+				write(STDERR_FILENO, ": Permission denied\n", 20);
+			}
+			else
+			{
+				write(STDERR_FILENO, "minishell: cd: ", 15);
+				write(STDERR_FILENO, target_path, ft_strlen(target_path));
+				write(STDERR_FILENO, ": Not a directory\n", 18);
+			}
+		}
+		else
+		{
+			write(STDERR_FILENO, "minishell: cd: ", 15);
+			write(STDERR_FILENO, target_path, ft_strlen(target_path));
+			write(STDERR_FILENO, ": No such file or directory\n", 28);
+		}
 		free(current_pwd);
 		return (1);
 	}
-	
-	// PWD ve OLDPWD'yi güncelle - env_list'te güncelleme yapmak için
-	// add_env_list fonksiyonunu kullan
 	old_pwd = getcwd(NULL, 0);
-	add_env_list(&env_list, ft_strjoin("OLDPWD=", current_pwd));
-	add_env_list(&env_list, ft_strjoin("PWD=", old_pwd));
-	
+	{
+		char *oldpwd_str = ft_strjoin("OLDPWD=", current_pwd);
+		char *pwd_str = ft_strjoin("PWD=", old_pwd);
+		add_env_list(&env_list, oldpwd_str);
+		add_env_list(&env_list, pwd_str);
+		free(oldpwd_str);
+		free(pwd_str);
+	}
 	free(current_pwd);
 	free(old_pwd);
 	return (0);
@@ -137,16 +169,29 @@ static void	add_to_history_list(t_history **head, char *line)
 
 void	builtin_history(char *line)
 {
-	static t_history	*head;
-	static int			count;
+	static t_history	*head = NULL;
+	static int			count = 0;
 
-	head = NULL;
-	if (line != NULL)
+	if (line == NULL)
 	{
-		add_to_history_list(&head, line);
-		count++;
-		add_history(line);
+		// Cleanup çağrısı
+		if (head)
+		{
+			free_history_list(head);
+			head = NULL;
+			count = 0;
+		}
+		return;
 	}
+	
+	add_to_history_list(&head, line);
+	count++;
+	add_history(line);
+}
+
+void	cleanup_history(void)
+{
+	builtin_history(NULL);
 }
 
 static int	is_valid_first_char(char c)
@@ -183,26 +228,110 @@ int	is_valid_identifier(const char *str)
 	return (1);
 }
 
-int	builtin_export(t_command *cmd, char ***envp, t_env **env_list)
+void	print_export_error(char *input)
 {
-	char	*input;
+	write(STDERR_FILENO, "minishell: export: `", 20);
+	write(STDERR_FILENO, input, ft_strlen(input));
+	write(STDERR_FILENO, "': not a valid identifier\n", 26);
+}
 
-	input = cmd->args[1];
-	if (!input)
+static int	compare_strings(const void *a, const void *b)
+{
+	return (ft_strcmp(*(const char **)a, *(const char **)b));
+}
+
+void	print_exported_vars(char **envp)
+{
+	int		i;
+	int		count;
+	char	**sorted_env;
+
+	count = 0;
+	while (envp[count])
+		count++;
+	
+	sorted_env = malloc(sizeof(char *) * count);
+	i = 0;
+	while (i < count)
 	{
-		printf("VAR=değer\n");
-		return (0);
+		sorted_env[i] = envp[i];
+		i++;
 	}
-	if (!is_valid_identifier(input))
+	
+	qsort(sorted_env, count, sizeof(char *), compare_strings);
+	
+	i = 0;
+	while (i < count)
 	{
-		write(STDERR_FILENO, "minishell: export: `", 20);
-		write(STDERR_FILENO, input, ft_strlen(input));
-		write(STDERR_FILENO, "': not a valid identifier\n", 26);
+		printf("declare -x %s\n", sorted_env[i]);
+		i++;
+	}
+	
+	free(sorted_env);
+}
+
+int	export_single_var(char *arg, char ***envp, t_env **env_list)
+{
+	char	*equal_sign;
+	char	*existing_value;
+
+	if (!is_valid_identifier(arg))
+	{
+		print_export_error(arg);
 		return (1);
 	}
-	add_env_list(env_list, input);
-	*envp = add_envp(*envp, input);
+	
+	equal_sign = ft_strchr(arg, '=');
+	if (equal_sign)
+	{
+		// VAR=value formatı
+		add_env_list(env_list, arg);
+		*envp = add_envp(*envp, arg);
+	}
+	else
+	{
+		// Sadece VAR formatı - mevcut değeri koru, sadece export et
+		existing_value = get_env_value(*env_list, arg);
+		if (existing_value)
+		{
+			// Zaten var, sadece export edilmiş olarak işaretle (zaten export edilmiş)
+			return (0);
+		}
+		else
+		{
+			// Yoksa boş değerle oluştur
+			char *new_var = ft_strjoin(arg, "=");
+			if (new_var)
+			{
+				add_env_list(env_list, new_var);
+				*envp = add_envp(*envp, new_var);
+				free(new_var);
+			}
+		}
+	}
 	return (0);
+}
+
+int	builtin_export(t_command *cmd, char ***envp, t_env **env_list)
+{
+	int	i;
+	int	exit_code;
+
+	if (!cmd->args[1])
+	{
+		print_exported_vars(*envp);
+		return (0);
+	}
+	
+	exit_code = 0;
+	i = 1;
+	while (cmd->args[i])
+	{
+		if (export_single_var(cmd->args[i], envp, env_list) != 0)
+			exit_code = 1;
+		i++;
+	}
+	return (exit_code);
 }
 
 int	builtin_unset(t_command *cmd, char ***envp, t_env **env_list)
@@ -223,20 +352,27 @@ int	builtin_exit(t_command *cmd)
 
 	printf("exit\n");
 	if (!cmd->args[1])
-		exit(0);
+	{
+		// Cleanup yapılacak, exit code 0
+		return (-1); // Özel return kodu
+	}
 	if (!is_num(cmd->args[1]))
 	{
-		write(STDERR_FILENO, "minishell: exit: numeric argument required\n",
-				43);
-		exit(2);
+		write(STDERR_FILENO, "minishell: exit: numeric argument required\n", 43);
+		return (-2); // Özel return kodu, exit code 2
 	}
 	if (cmd->args[2])
 	{
 		write(STDERR_FILENO, "minishell: exit: too many arguments\n", 36);
 		return (1);
 	}
-	exit_code = ft_atoi(cmd->args[1]) % 256;
-	exit(exit_code);
+	exit_code = ft_atoi(cmd->args[1]);
+	// Bash gibi exit code hesapla: 0-255 arası
+	if (exit_code < 0)
+		exit_code = 256 + (exit_code % 256);
+	else
+		exit_code = exit_code % 256;
+	return (-3 - exit_code); // Özel return kodu, negatif offset
 }
 
 char	**copy_env(char **envp)

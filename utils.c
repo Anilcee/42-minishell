@@ -61,6 +61,26 @@ static int	ft_clean(char **a, int i)
 	return (0);
 }
 
+char	*build_path(const char *dir, const char *filename)
+{
+	char	*temp;
+	char	*full_path;
+
+	temp = ft_strjoin(dir, "/");
+	full_path = ft_strjoin(temp, filename);
+	free(temp);
+	return (full_path);
+}
+
+char	*append_string(char *original, const char *to_append)
+{
+	char	*temp;
+
+	temp = ft_strjoin(original, to_append);
+	free(original);
+	return (temp);
+}
+
 char	**ft_split(const char *str, char separator)
 {
 	char	**srg;
@@ -225,6 +245,8 @@ int	ft_strcmp(const char *s1, const char *s2)
 		i++;
 	return ((unsigned char)s1[i] - (unsigned char)s2[i]);
 }
+
+
 
 size_t	ft_strlcpy(char *dst, const char *src, size_t size)
 {

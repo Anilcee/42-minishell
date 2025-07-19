@@ -14,6 +14,16 @@
 # include <sys/wait.h>
 # include <unistd.h>
 
+typedef enum e_error_code
+{
+	CMD_SUCCESS = 0,
+	CMD_NOT_FOUND = -1,
+	FILE_NOT_FOUND = -2,
+	IS_DIRECTORY = -3,
+	PERMISSION_DENIED = -4,
+	PATH_NOT_SET = -5
+}						t_error_code;
+
 typedef enum e_redirect_type
 {
 	REDIR_IN,
@@ -95,16 +105,19 @@ char					**ft_split(const char *str, char separator);
 char					*ft_strjoin(char const *s1, char const *s2);
 char					*ft_strdup(const char *s);
 char					*ft_itoa(int n);
+char					*build_path(const char *dir, const char *filename);
+char					*append_string(char *original, const char *to_append);
 size_t					ft_strlen(const char *s);
 size_t					ft_strlcpy(char *dst, const char *src, size_t size);
-int						external_commands(t_command *cmd, char **envp);
-t_token					*tokenize(char *input, t_env *env_list, t_shell *shell);
-void					execute_builtin(t_command *cmds, t_shell *shell);
+int						external_commands(t_command *cmd, t_shell *shell);
+t_token					*tokenize(char *input, t_shell *shell);
+int						execute_builtin(t_command *cmds, t_shell *shell);
 int						builtin_cd(t_command *cmd, t_env *env_list);
 int						builtin_pwd(void);
 int						builtin_env(char **env);
 int						builtin_echo(t_command *cmd);
 void					builtin_history(char *line);
+void					cleanup_history(void);
 int						builtin_export(t_command *cmd, char ***envp,
 							t_env **env_list);
 int						is_valid_identifier(const char *str);
@@ -134,11 +147,21 @@ int						execute_builtin_in_child(t_command *cmd,
 int						is_builtin(const char *cmd);
 int						ft_atoi(const char *str);
 void					free_env_list(t_env *head);
+void					free_tokens(t_token *head);
+void					free_commands(t_command *head);
+void					free_redirects(t_redirect *head);
+void					free_envp_array(char **envp);
+void					free_shell(t_shell *shell);
+void					free_history_list(t_history *head);
 int						check_absolute_path(char *command_name);
-char					*find_in_path(char *command_name);
+char					*find_in_path(char *command_name, t_shell *shell);
 int						execute_child_process(char *program_path,
 							t_command *cmd, char **envp);
 void					free_paths_array(char **paths);
 int						get_exit_status(int status);
+void					handle_external_error2(t_command *cmds, int result,
+							t_shell *shell);
+void					print_error_message(char *cmd_name, char *error_msg,
+							int exit_code, t_shell *shell);
 
 #endif

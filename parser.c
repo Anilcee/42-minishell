@@ -100,6 +100,7 @@ t_command	*parse_tokens(t_token *tokens)
 			else
 			{
 				write(2, "minishell: syntax error near unexpected token\n", 45);
+				free_commands(head);
 				return (NULL);
 			}
 		}
