@@ -20,17 +20,17 @@ int	ft_wtermsig(int status)
 	return (status & 0x7f);
 }
 
-static void	execute_builtin_commands(t_command *cmd, t_shell *shell)
+void	execute_builtin_commands(t_command *cmd, t_shell *shell)
 {
 	if (ft_strcmp(cmd->args[0], "cd") == 0)
-		exit(builtin_cd(cmd, shell->env_list));
+		exit(builtin_cd(cmd, &shell->env_list));
 	else if (ft_strcmp(cmd->args[0], "pwd") == 0)
 		exit(builtin_pwd());
 	else if (ft_strcmp(cmd->args[0], "env") == 0)
 		exit(builtin_env(shell->envp));
 }
 
-static void	execute_more_builtins(t_command *cmd, t_shell *shell)
+void	execute_more_builtins(t_command *cmd, t_shell *shell)
 {
 	int	ret;
 
@@ -52,12 +52,6 @@ static void	execute_more_builtins(t_command *cmd, t_shell *shell)
 	}
 }
 
-int	execute_builtin_in_child(t_command *cmd, t_shell *shell)
-{
-	execute_builtin_commands(cmd, shell);
-	execute_more_builtins(cmd, shell);
-	return (0);
-}
 
 int	is_builtin(const char *cmd)
 {
@@ -328,28 +322,62 @@ static void	setup_child_pipes(int prev_fd, int *fd, t_command *current)
 	}
 }
 
-static void	run_child_command(t_command *current, t_shell *shell, char **envp)
+static void	run_child_command(t_command *current_cmd, t_shell *shell, \
+							t_command *all_cmds, t_token *all_tokens)
 {
 	char	*program_path;
-	char	*command_name;
 
-	if (handle_redirections(current) < 0)
-		exit(1);
-	if (is_builtin(current->args[0]))
-		execute_builtin_in_child(current, shell);
-	command_name = current->args[0];
-	program_path = resolve_command_path(command_name, shell);
-	execve(program_path, current->args, envp);
+	// Yönlendirmeler başarısız olursa, her şeyi temizle ve çık
+	if (handle_redirections(current_cmd) < 0)
+		cleanup_and_exit(shell, all_cmds, all_tokens, 1);
+	if (!current_cmd->args || !current_cmd->args[0])
+		cleanup_and_exit(shell, all_cmds, all_tokens, 0);
+	if (is_builtin(current_cmd->args[0]))
+	{
+		int ret;
+		// Pipe içindeki builtin'ler child'da çalışır ve ana shell'i etkilemez
+		ret = execute_builtin(current_cmd, shell);
+		cleanup_and_exit(shell, all_cmds, all_tokens, ret);
+	}
+	program_path = resolve_command_path(current_cmd->args[0], shell);
+	if (!program_path)
+	{
+		// Hata mesajını resolve_command_path'in kendisi yazmalı
+		// ya da burada biz yazmalıyız.
+		print_error_message(current_cmd->args[0], \
+						": command not found\n", 127, NULL);
+		cleanup_and_exit(shell, all_cmds, all_tokens, 127);
+	}
+	execve(program_path, current_cmd->args, shell->envp);
 	free(program_path);
-	perror("execve");
-	exit(127);
+	perror("minishell: execve");
+	cleanup_and_exit(shell, all_cmds, all_tokens, 126);
 }
 
-static void	handle_child_process(t_command *current, t_shell *shell,
-			char **envp, t_pipe_data *pipe_data)
+// execute_builtin_in_child'ın da düzenlenmesi gerekir
+void execute_builtin_in_child(t_command *cmd, t_shell *shell, t_command *all_cmds, t_token *all_tokens)
+{
+    int exit_code;
+
+    // Builtin'i çalıştır
+    // Not: Artık execute_builtin'in kendisi de state'i değiştirmemeli, sadece exit kodu döndürmeli.
+    // Pipe içindeki bir 'cd' veya 'export' ana shell'i etkilemez.
+    exit_code = 0;
+	if (ft_strcmp(cmd->args[0], "cd") == 0)
+		exit_code = builtin_cd(cmd, &shell->env_list); // Bu child'ın kopyasını etkiler, zararsız.
+	else if (ft_strcmp(cmd->args[0], "pwd") == 0)
+		exit_code = builtin_pwd();
+    // ... diğer builtin'ler
+    
+    // Her şeyi temizle ve builtin'in döndürdüğü kod ile çık
+    cleanup_and_exit(shell, all_cmds, all_tokens, exit_code);
+}
+
+static void	handle_child_process(t_command *current, t_shell *shell, \
+			t_token *tokens, t_command *cmds, t_pipe_data *pipe_data)
 {
 	setup_child_pipes(pipe_data->prev_fd, pipe_data->fd, current);
-			run_child_command(current, shell, envp);
+	run_child_command(current, shell, cmds, tokens);
 }
 
 static void	handle_parent_process(t_pid_list **pid_list, pid_t pid,
@@ -365,7 +393,7 @@ static void	handle_parent_process(t_pid_list **pid_list, pid_t pid,
 	}
 }
 
-static t_shell	init_shell_for_pipe(char **envp)
+t_shell	init_shell_for_pipe(char **envp)
 {
 	t_shell	shell;
 
@@ -388,23 +416,28 @@ static int	setup_pipe_if_needed(t_command *current, int *fd)
 	return (0);
 }
 
-static int	handle_process_creation(t_command *current, t_shell *shell,
-			char **envp, t_pipe_data *pipe_data, t_pid_list **pid_list)
+static int	handle_process_creation(t_command *current, t_shell *shell, \
+			t_command *all_cmds, t_token *all_tokens, \
+			t_pipe_data *pipe_data, t_pid_list **pid_list)
 {
 	pid_t	pid;
 
 	if (setup_pipe_if_needed(current, pipe_data->fd) < 0)
 		return (-1);
 	pid = fork();
-	if (pid == -1)
+	if (pid < 0)
 	{
 		perror("fork");
 		return (-1);
 	}
-	if (pid == 0)
-		handle_child_process(current, shell, envp, pipe_data);
-	else
+	if (pid == 0) // Child Proses
+	{
+		handle_child_process(current, shell, all_tokens, all_cmds, pipe_data);
+	}
+	else // Parent Proses
+	{
 		handle_parent_process(pid_list, pid, pipe_data, current);
+	}
 	return (0);
 }
 
@@ -437,7 +470,7 @@ static int	wait_for_all_processes(t_pid_list *pid_list)
 	return (final_exit_code);
 }
 
-static void	cleanup_resources(t_pid_list *pid_list, t_shell shell)
+void	cleanup_resources(t_pid_list *pid_list, t_shell shell)
 {
 	t_pid_list	*temp;
 
@@ -451,26 +484,29 @@ static void	cleanup_resources(t_pid_list *pid_list, t_shell shell)
 		free_env_list(shell.env_list);
 }
 
-int	execute_piped_commands(t_command *cmds, char **envp)
+int	execute_piped_commands(t_command *cmds, t_token *tokens, t_shell *shell)
 {
 	t_command		*current;
 	t_pid_list		*pid_list;
-	t_shell			shell;
 	t_pipe_data		pipe_data;
 	int				final_exit_code;
 
 	current = cmds;
 	pid_list = NULL;
-	shell = init_shell_for_pipe(envp);
 	pipe_data.prev_fd = -1;
 	while (current)
 	{
-		if (handle_process_creation(current, &shell, envp,
-				&pipe_data, &pid_list) < 0)
+		// handle_process_creation'a artık tüm ana yapıları iletiyoruz.
+		if (handle_process_creation(current, shell, cmds, tokens, \
+									&pipe_data, &pid_list) < 0)
+		{
+			// Hata durumunda pid listesini temizle
+			wait_and_free_pids(pid_list);
 			return (1);
+		}
 		current = current->next;
 	}
 	final_exit_code = wait_for_all_processes(pid_list);
-	cleanup_resources(pid_list, shell);
+	wait_and_free_pids(pid_list); // Free the list itself
 	return (final_exit_code);
 }

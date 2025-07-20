@@ -1,87 +1,88 @@
 #include "minishell.h"
 
-int	builtin_cd(t_command *cmd, t_env *env_list)
+static void	update_pwd_vars(t_env **env_list, char *old_pwd_val)
+{
+	char	new_pwd_val[4096];
+	char	*oldpwd_str;
+	char	*pwd_str;
+
+	if (getcwd(new_pwd_val, sizeof(new_pwd_val)) != NULL)
+	{
+		// OLDPWD'yi güncelle
+		oldpwd_str = ft_strjoin("OLDPWD=", old_pwd_val);
+		if (oldpwd_str)
+		{
+			add_env_list(env_list, oldpwd_str);
+			free(oldpwd_str);
+		}
+		
+		// PWD'yi güncelle
+		pwd_str = ft_strjoin("PWD=", new_pwd_val);
+		if (pwd_str)
+		{
+			add_env_list(env_list, pwd_str);
+			free(pwd_str);
+		}
+	}
+}
+
+static void	print_cd_error(const char *path, const char *msg)
+{
+	write(STDERR_FILENO, "minishell: cd: ", 15);
+	if (path)
+	{
+		write(STDERR_FILENO, path, ft_strlen(path));
+		write(STDERR_FILENO, ": ", 2);
+	}
+	write(STDERR_FILENO, msg, ft_strlen(msg));
+	write(STDERR_FILENO, "\n", 1);
+}
+
+int	builtin_cd(t_command *cmd, t_env **env_list)
 {
 	char	*target_path;
-	char	*current_pwd;
-	char	*old_pwd;
+	char	current_pwd[4096];
 	int		argc;
 
-	if (!cmd || !cmd->args)
-		return (1);
 	argc = 0;
 	while (cmd->args[argc])
 		argc++;
-	
 	if (argc > 2)
 	{
-		write(STDERR_FILENO, "minishell: cd: too many arguments\n", 34);
+		print_cd_error(NULL, "too many arguments");
 		return (1);
 	}
-	current_pwd = getcwd(NULL, 0);
-	
-	if (!cmd->args[1] || ft_strcmp(cmd->args[1], "~") == 0)
-		target_path = get_env_value(env_list, "HOME");
-	else if (ft_strcmp(cmd->args[1], "-") == 0)
+	if (getcwd(current_pwd, sizeof(current_pwd)) == NULL)
 	{
-		target_path = get_env_value(env_list, "OLDPWD");
-		if (!target_path)
+		print_cd_error("getcwd", "error retrieving current directory");
+		return (1);
+	}
+	target_path = cmd->args[1];
+	if (argc == 1 || ft_strcmp(target_path, "~") == 0)
+	{
+		target_path = get_env_value(*env_list, "HOME");
+		if (!target_path || *target_path == '\0')
 		{
-			write(STDERR_FILENO, "minishell: cd: OLDPWD not set\n", 30);
-			free(current_pwd);
+			print_cd_error(NULL, "HOME not set");
 			return (1);
 		}
-		write(STDOUT_FILENO, target_path, ft_strlen(target_path));
-		write(STDOUT_FILENO, "\n", 1);
 	}
-	else
-		target_path = cmd->args[1];
-	
+	else if (ft_strcmp(target_path, "-") == 0)
+	{
+		target_path = get_env_value(*env_list, "OLDPWD");
+		if (!target_path || *target_path == '\0')
+		{
+			print_cd_error(NULL, "OLDPWD not set");
+			return (1);
+		}
+		printf("%s\n", target_path);
+	}
 	if (chdir(target_path) != 0)
 	{
-		struct stat	path_stat;
-		
-		if (stat(target_path, &path_stat) == 0)
-		{
-			if (S_ISREG(path_stat.st_mode))
-			{
-				write(STDERR_FILENO, "minishell: cd: ", 15);
-				write(STDERR_FILENO, target_path, ft_strlen(target_path));
-				write(STDERR_FILENO, ": Not a directory\n", 18);
-			}
-			else if (S_ISDIR(path_stat.st_mode))
-			{
-				write(STDERR_FILENO, "minishell: cd: ", 15);
-				write(STDERR_FILENO, target_path, ft_strlen(target_path));
-				write(STDERR_FILENO, ": Permission denied\n", 20);
-			}
-			else
-			{
-				write(STDERR_FILENO, "minishell: cd: ", 15);
-				write(STDERR_FILENO, target_path, ft_strlen(target_path));
-				write(STDERR_FILENO, ": Not a directory\n", 18);
-			}
-		}
-		else
-		{
-			write(STDERR_FILENO, "minishell: cd: ", 15);
-			write(STDERR_FILENO, target_path, ft_strlen(target_path));
-			write(STDERR_FILENO, ": No such file or directory\n", 28);
-		}
-		free(current_pwd);
+		print_cd_error(target_path, "No such file or directory");
 		return (1);
 	}
-	old_pwd = getcwd(NULL, 0);
-	{
-		char *oldpwd_str = ft_strjoin("OLDPWD=", current_pwd);
-		char *pwd_str = ft_strjoin("PWD=", old_pwd);
-		add_env_list(&env_list, oldpwd_str);
-		add_env_list(&env_list, pwd_str);
-		free(oldpwd_str);
-		free(pwd_str);
-	}
-	free(current_pwd);
-	free(old_pwd);
+	update_pwd_vars(env_list, current_pwd);
 	return (0);
 }
 
@@ -265,58 +266,79 @@ static int	compare_strings(const void *a, const void *b)
 	return (ft_strcmp(*(const char **)a, *(const char **)b));
 }
 
-void	print_exported_vars(t_env *env_list)
+// Değiştirilmiş: print_exported_vars fonksiyonu
+
+// YARDIMCI BİR FONKSİYON: char ** dizisini ve içindeki stringleri temizler.
+// Bunu free_utils.c dosyana da ekleyebilirsin.
+static void free_string_array(char **arr)
+{
+	int i;
+
+	if (!arr)
+		return;
+	i = 0;
+	while (arr[i])
+	{
+		free(arr[i]);
+		i++;
+	}
+	free(arr);
+}
+
+
+void print_exported_vars(t_env *env_list)
 {
 	int		i;
 	int		count;
 	char	**sorted_env;
-	t_env	*temp = env_list;
-	t_env	*temp2 = env_list;
-	count = 0;
+	t_env	*temp;
 
-	// Env listesi içindeki elemanları say
-	while (temp && temp->key)
+	// 1. Ortam değişkenlerinin sayısını bul
+	count = 0;
+	temp = env_list;
+	while (temp)
 	{
 		count++;
 		temp = temp->next;
 	}
+	if (count == 0)
+		return;
 
-	// Bellek tahsisi
-	sorted_env = malloc(sizeof(char *) * count);
+	// 2. String dizisi için bellek ayır
+	sorted_env = malloc(sizeof(char *) * (count + 1));
+	if (!sorted_env)
+		return;
+
+	// 3. Diziyi "KEY=VALUE" formatında doldur
 	i = 0;
-
-	// Sorted_env dizisini doldur
-	while (i < count)
+	temp = env_list;
+	while (temp)
 	{
-		sorted_env[i] = ft_strjoin(env_list->key, "=");  // Key + "=" birleştir
-		char *temp_value = ft_strjoin(sorted_env[i], env_list->value);  // Değerle birleştir
-		free(sorted_env[i]);  // Önceki string'i serbest bırak
-		sorted_env[i] = temp_value;  // Yeni birleştirilen string'i at
-
+		char *key_part = ft_strjoin(temp->key, "=\""); // "KEY=\"" kısmı
+		char *full_var = ft_strjoin(key_part, temp->value); // "KEY=\"VALUE" kısmı
+		free(key_part); // Geçici parçayı temizle
+		sorted_env[i] = ft_strjoin(full_var, "\""); // Son tırnağı ekle: "KEY=\"VALUE\""
+		free(full_var); // Geçici parçayı temizle
+		temp = temp->next;
 		i++;
-		env_list = env_list->next;
 	}
+	sorted_env[i] = NULL;
 
-	// Sıralama işlemi
+	// 4. Diziyi alfabetik olarak sırala
 	qsort(sorted_env, count, sizeof(char *), compare_strings);
 
-	// sorted_env içindeki her öğeyi bir t_env listesine dönüştür
+	// 5. Sıralanmış diziyi "declare -x" formatında yazdır
 	i = 0;
-	t_env *sorted = envp_to_list(sorted_env);
-	temp2 = sorted;
-
-	// Sorted listeyi yazdır
-	while (i < count && sorted)
+	while (i < count)
 	{
-		printf("declare -x %s=\"%s\"\n", sorted->key, sorted->value);
-		sorted = sorted->next;
+		printf("declare -x %s\n", sorted_env[i]);
 		i++;
 	}
 
-	// Bellek serbest bırakma
-	free_env_list(temp2);   // Env listesi serbest bırak
-	free(sorted_env);        // sorted_env dizisini serbest bırak
+	// 6. *** EN ÖNEMLİ DÜZELTME: AYRILAN TÜM BELLEĞİ SERBEST BIRAK ***
+	free_string_array(sorted_env); // Hem diziyi hem de içindeki tüm stringleri temizle
 }
+
 
 
 int	export_single_var(char *arg, char ***envp, t_env **env_list)
