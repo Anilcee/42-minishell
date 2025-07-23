@@ -58,53 +58,83 @@ void	add_redirect(t_command *cmd, t_redirect_type type, char *filename)
 	}
 }
 
+int	handle_redirect_token(t_token **tokens, t_command *current_cmd,
+		t_command **head)
+{
+	t_redirect_type	r_type;
+
+	r_type = -1;
+	if ((*tokens)->t_type == T_REDIRECT_IN)
+		r_type = REDIR_IN;
+	else if ((*tokens)->t_type == T_REDIRECT_OUT)
+		r_type = REDIR_OUT;
+	else if ((*tokens)->t_type == T_APPEND)
+		r_type = REDIR_APPEND;
+	else if ((*tokens)->t_type == T_HEREDOC)
+		r_type = REDIR_HEREDOC;
+	(*tokens) = (*tokens)->next;
+	if (*tokens && (*tokens)->t_type == T_WORD)
+		add_redirect(current_cmd, r_type, (*tokens)->value);
+	else
+	{
+		write(2, "minishell: syntax error near unexpected token\n", 45);
+		free_commands(*head);
+		return (0);
+	}
+	return (1);
+}
+
+void	handle_word_token(t_command *current_cmd, t_token *tokens)
+{
+	add_arg(current_cmd, tokens->value);
+}
+
+void	handle_pipe_token(t_command **current_cmd, t_token **tokens)
+{
+	(*current_cmd)->next = create_new_command();
+	(*current_cmd) = (*current_cmd)->next;
+	(*tokens) = (*tokens)->next;
+}
+
+static int	handle_token(t_token **tokens, t_command **current_cmd,
+		t_command **head)
+{
+	if ((*tokens)->t_type == T_PIPE)
+	{
+		handle_pipe_token(current_cmd, tokens);
+		return (1);
+	}
+	if (!*current_cmd)
+	{
+		*current_cmd = create_new_command();
+		if (!*head)
+			*head = *current_cmd;
+	}
+	if ((*tokens)->t_type == T_WORD)
+		handle_word_token(*current_cmd, *tokens);
+	else if ((*tokens)->t_type >= T_REDIRECT_IN
+		&& (*tokens)->t_type <= T_HEREDOC)
+	{
+		if (!handle_redirect_token(tokens, *current_cmd, head))
+			return (0);
+		*tokens = (*tokens)->next;
+		return (1);
+	}
+	*tokens = (*tokens)->next;
+	return (1);
+}
+
 t_command	*parse_tokens(t_token *tokens)
 {
-	t_command		*head;
-	t_command		*current_cmd;
-	t_redirect_type	r_type;
+	t_command	*head;
+	t_command	*current_cmd;
 
 	head = NULL;
 	current_cmd = NULL;
 	while (tokens)
 	{
-		if (tokens->t_type == T_PIPE)
-		{
-			current_cmd->next = create_new_command();
-			current_cmd = current_cmd->next;
-			tokens = tokens->next;
-			continue ;
-		}
-		if (!current_cmd)
-		{
-			current_cmd = create_new_command();
-			if (!head)
-				head = current_cmd;
-		}
-		if (tokens->t_type == T_WORD)
-			add_arg(current_cmd, tokens->value);
-		else if (tokens->t_type >= T_REDIRECT_IN && tokens->t_type <= T_HEREDOC)
-		{
-			r_type = -1;
-			if (tokens->t_type == T_REDIRECT_IN)
-				r_type = REDIR_IN;
-			else if (tokens->t_type == T_REDIRECT_OUT)
-				r_type = REDIR_OUT;
-			else if (tokens->t_type == T_APPEND)
-				r_type = REDIR_APPEND;
-			else if (tokens->t_type == T_HEREDOC)
-				r_type = REDIR_HEREDOC;
-			tokens = tokens->next;
-			if (tokens && tokens->t_type == T_WORD)
-				add_redirect(current_cmd, r_type, tokens->value);
-			else
-			{
-				write(2, "minishell: syntax error near unexpected token\n", 45);
-				free_commands(head);
-				return (NULL);
-			}
-		}
-		tokens = tokens->next;
+		if (!handle_token(&tokens, &current_cmd, &head))
+			return (NULL);
 	}
 	return (head);
 }

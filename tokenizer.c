@@ -1,5 +1,6 @@
 #include "minishell.h"
 
+// Yardımcı fonksiyonlar
 int	ft_isspace(int c)
 {
 	if (c == ' ' || c == '\t')
@@ -74,43 +75,66 @@ char	*extract_word(char *input, int start, int end)
 	return (word);
 }
 
-char	*expand_variable(char *input, int *index, t_env *env_list,
-		t_shell *shell)
+static char	*expand_exit_code(int *index, t_shell *shell)
 {
-	char	*result;
+	(*index)++;
+	return (ft_itoa(shell->last_exit_code));
+}
+
+static char	*expand_env_variable(char *input, int *index, t_env *env_list)
+{
 	int		start;
 	int		len;
 	char	*key;
 	char	*value;
+	char	*result;
 
-	result = NULL;
+	start = *index;
+	while (ft_isalnum(input[*index]) || input[*index] == '_')
+		(*index)++;
+	len = *index - start;
+	key = ft_strndup(input + start, len);
+	value = get_env_value(env_list, key);
+	if (value)
+		result = ft_strdup(value);
+	else
+		result = ft_strdup("");
+	free(key);
+	return (result);
+}
+
+char	*expand_variable(char *input, int *index, t_env *env_list,
+		t_shell *shell)
+{
 	(*index)++;
 	if (input[*index] == '?')
-	{
-		(*index)++;
-		result = ft_itoa(shell->last_exit_code);
-	}
+		return (expand_exit_code(index, shell));
 	else if (ft_isalnum(input[*index]) || input[*index] == '_')
-	{
-		start = *index;
-		while (ft_isalnum(input[*index]) || input[*index] == '_')
-			(*index)++;
-		len = *index - start;
-		key = ft_strndup(input + start, len);
-		value = get_env_value(env_list, key);
-		if (value)
-			result = ft_strdup(value);
-		else
-			result = ft_strdup("");
-		free(key);
-	}
+		return (expand_env_variable(input, index, env_list));
 	else
-		result = ft_strdup("$");
+		return (ft_strdup("$"));
+}
+
+char	*process_word_no_expansion(char *input, int start, int end)
+{
+	char	*result;
+	int		i;
+	char	temp_str[2];
+
+	result = ft_strdup("");
+	i = start;
+	while (i < end)
+	{
+		temp_str[0] = input[i];
+		temp_str[1] = '\0';
+		result = append_string(result, temp_str);
+		i++;
+	}
 	return (result);
 }
 
 char	*process_word_with_expansion(char *input, int start, int end,
-		t_shell *shell, char quote_type)
+		t_shell *shell)
 {
 	char	*result;
 	int		i;
@@ -121,7 +145,7 @@ char	*process_word_with_expansion(char *input, int start, int end,
 	i = start;
 	while (i < end)
 	{
-		if (input[i] == '$' && quote_type != '\'')
+		if (input[i] == '$')
 		{
 			expanded = expand_variable(input, &i, shell->env_list, shell);
 			result = append_string(result, expanded);
@@ -149,7 +173,10 @@ static char	*handle_quoted_text(char *input, int *i, t_shell *shell)
 	start = *i;
 	while (input[*i] && input[*i] != quote)
 		(*i)++;
-	part = process_word_with_expansion(input, start, *i, shell, quote);
+	if (quote == '\'')
+		part = process_word_no_expansion(input, start, *i);
+	else
+		part = process_word_with_expansion(input, start, *i, shell);
 	if (input[*i] == quote)
 		(*i)++;
 	return (part);
@@ -163,7 +190,7 @@ static char	*handle_normal_text(char *input, int *i, t_shell *shell)
 	while (input[*i] && !ft_isspace(input[*i]) && !is_special_char(input[*i])
 		&& !is_quote(input[*i]))
 		(*i)++;
-	return (process_word_with_expansion(input, start, *i, shell, '\0'));
+	return (process_word_with_expansion(input, start, *i, shell));
 }
 
 static char	*process_word_token(char *input, int *i, t_shell *shell)

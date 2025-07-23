@@ -24,6 +24,8 @@ typedef enum e_error_code
 	PATH_NOT_SET = -5
 }						t_error_code;
 
+
+
 typedef enum e_redirect_type
 {
 	REDIR_IN,
@@ -96,6 +98,15 @@ typedef struct s_pipe_data
 	int					fd[2];
 }						t_pipe_data;
 
+typedef enum e_exit_result
+{
+	EXIT_OK = 0,
+	EXIT_TOO_MANY_ARGS = 1,
+	EXIT_NOT_NUMERIC = 2,
+	EXIT_NO_ARG = 3,
+	EXIT_ARG_VALUE = 4 // Gerçek exit kodu pointer ile dönecek
+} t_exit_result;
+
 int						ft_wifexited(int status);
 int						ft_wexitstatus(int status);
 int						ft_wifsignaled(int status);
@@ -124,7 +135,8 @@ int						is_valid_identifier(const char *str);
 char					**copy_env(char **envp);
 int						handle_redirections(t_command *cmd);
 int						has_pipe(t_command *cmds);
-int 					execute_piped_commands(t_command *cmds, t_token *tokens, t_shell *shell);
+int						execute_piped_commands(t_command *cmds, t_token *tokens,
+							t_shell *shell);
 t_command				*parse_tokens(t_token *tokens);
 t_env					*add_env_list(t_env **head, char *input);
 char					**add_envp(char **envp, char *input);
@@ -140,12 +152,14 @@ int						is_num(char *str);
 int						ft_isalnum(char c);
 int						ft_strcmp(const char *s1, const char *s2);
 char					*ft_strchr(const char *s, int i);
-int						execute_command(t_command *cmds, t_token *tokens, t_shell *shell);
-int						builtin_exit(t_command *cmd);
-void execute_builtin_in_child(t_command *cmd, t_shell *shell, t_command *all_cmds, t_token *all_tokens);
+int						execute_command(t_command *cmds, t_token *tokens,
+							t_shell *shell);
+int						builtin_exit(t_command *cmd, int *real_exit_code);
+void					execute_builtin_in_child(t_command *cmd, t_shell *shell,
+							t_command *all_cmds, t_token *all_tokens);
 int						is_builtin(const char *cmd);
-void	cleanup_and_exit(t_shell *shell, t_command *all_cmds, \
-						t_token *all_tokens, int exit_code);
+void					cleanup_and_exit(t_shell *shell, t_command *all_cmds,
+							t_token *all_tokens, int exit_code);
 int						ft_atoi(const char *str);
 void					free_env_list(t_env *head);
 void					free_tokens(t_token *head);

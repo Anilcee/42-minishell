@@ -33,6 +33,7 @@ void	execute_builtin_commands(t_command *cmd, t_shell *shell)
 void	execute_more_builtins(t_command *cmd, t_shell *shell)
 {
 	int	ret;
+		int exit_code;
 
 	if (ft_strcmp(cmd->args[0], "echo") == 0)
 	{
@@ -45,23 +46,19 @@ void	execute_more_builtins(t_command *cmd, t_shell *shell)
 		exit(builtin_unset(cmd, &shell->envp, &shell->env_list));
 	else if (ft_strcmp(cmd->args[0], "exit") == 0)
 	{
-		ret = builtin_exit(cmd);
-		if (ret == 1)
+		ret = builtin_exit(cmd, &exit_code);
+		if (ret == EXIT_TOO_MANY_ARGS)
 			exit(1);
 		exit(0);
 	}
 }
 
-
 int	is_builtin(const char *cmd)
 {
-	return (ft_strcmp(cmd, "cd") == 0 ||
-			ft_strcmp(cmd, "pwd") == 0 ||
-			ft_strcmp(cmd, "env") == 0 ||
-			ft_strcmp(cmd, "echo") == 0 ||
-			ft_strcmp(cmd, "export") == 0 ||
-			ft_strcmp(cmd, "unset") == 0 ||
-			ft_strcmp(cmd, "exit") == 0);
+	return (ft_strcmp(cmd, "cd") == 0 || ft_strcmp(cmd, "pwd") == 0
+		|| ft_strcmp(cmd, "env") == 0 || ft_strcmp(cmd, "echo") == 0
+		|| ft_strcmp(cmd, "export") == 0 || ft_strcmp(cmd, "unset") == 0
+		|| ft_strcmp(cmd, "exit") == 0);
 }
 
 void	add_pid(t_pid_list **head, pid_t pid)
@@ -224,7 +221,8 @@ static char	*validate_absolute_path(char *command_name)
 	DIR	*dir;
 
 	if (access(command_name, F_OK) != 0)
-		print_error_and_exit(command_name, ": No such file or directory\n", 127);
+		print_error_and_exit(command_name, ": No such file or directory\n",
+			127);
 	dir = opendir(command_name);
 	if (dir != NULL)
 	{
@@ -275,22 +273,20 @@ static char	*resolve_path_command(char *command_name, t_shell *shell)
 		path_env = get_env_value(shell->env_list, "PATH");
 	else
 	{
-		// Pipe'da env_list NULL olabilir, envp'den PATH'i al
 		path_env = NULL;
-		i = 0;
-		while (shell->envp && shell->envp[i])
+		i = -1;
+		while (shell->envp && shell->envp[++i])
 		{
 			if (ft_strncmp(shell->envp[i], "PATH=", 5) == 0)
 			{
 				path_env = shell->envp[i] + 5;
-				break;
+				break ;
 			}
-			i++;
 		}
 	}
-	
 	if (!path_env)
-		print_error_and_exit(command_name, ": No such file or directory\n", 127);
+		print_error_and_exit(command_name, ": No such file or directory\n",
+			127);
 	paths = ft_split(path_env, ':');
 	program_path = search_in_paths(command_name, paths);
 	cleanup_paths_array(paths);
@@ -322,30 +318,26 @@ static void	setup_child_pipes(int prev_fd, int *fd, t_command *current)
 	}
 }
 
-static void	run_child_command(t_command *current_cmd, t_shell *shell, \
-							t_command *all_cmds, t_token *all_tokens)
+static void	run_child_command(t_command *current_cmd, t_shell *shell,
+		t_command *all_cmds, t_token *all_tokens)
 {
 	char	*program_path;
+	int		ret;
 
-	// Yönlendirmeler başarısız olursa, her şeyi temizle ve çık
 	if (handle_redirections(current_cmd) < 0)
 		cleanup_and_exit(shell, all_cmds, all_tokens, 1);
 	if (!current_cmd->args || !current_cmd->args[0])
 		cleanup_and_exit(shell, all_cmds, all_tokens, 0);
 	if (is_builtin(current_cmd->args[0]))
 	{
-		int ret;
-		// Pipe içindeki builtin'ler child'da çalışır ve ana shell'i etkilemez
 		ret = execute_builtin(current_cmd, shell);
 		cleanup_and_exit(shell, all_cmds, all_tokens, ret);
 	}
 	program_path = resolve_command_path(current_cmd->args[0], shell);
 	if (!program_path)
 	{
-		// Hata mesajını resolve_command_path'in kendisi yazmalı
-		// ya da burada biz yazmalıyız.
-		print_error_message(current_cmd->args[0], \
-						": command not found\n", 127, NULL);
+		print_error_message(current_cmd->args[0], ": command not found\n", 127,
+			NULL);
 		cleanup_and_exit(shell, all_cmds, all_tokens, 127);
 	}
 	execve(program_path, current_cmd->args, shell->envp);
@@ -355,33 +347,34 @@ static void	run_child_command(t_command *current_cmd, t_shell *shell, \
 }
 
 // execute_builtin_in_child'ın da düzenlenmesi gerekir
-void execute_builtin_in_child(t_command *cmd, t_shell *shell, t_command *all_cmds, t_token *all_tokens)
+void	execute_builtin_in_child(t_command *cmd, t_shell *shell,
+		t_command *all_cmds, t_token *all_tokens)
 {
-    int exit_code;
+	int	exit_code;
 
-    // Builtin'i çalıştır
-    // Not: Artık execute_builtin'in kendisi de state'i değiştirmemeli, sadece exit kodu döndürmeli.
-    // Pipe içindeki bir 'cd' veya 'export' ana shell'i etkilemez.
-    exit_code = 0;
+	// Builtin'i çalıştır
+	// Not: Artık execute_builtin'in kendisi de state'i değiştirmemeli,
+	// Pipe içindeki bir 'cd' veya 'export' ana shell'i etkilemez.
+	exit_code = 0;
 	if (ft_strcmp(cmd->args[0], "cd") == 0)
-		exit_code = builtin_cd(cmd, &shell->env_list); // Bu child'ın kopyasını etkiler, zararsız.
+		exit_code = builtin_cd(cmd, &shell->env_list);
+	// Bu child'ın kopyasını etkiler, zararsız.
 	else if (ft_strcmp(cmd->args[0], "pwd") == 0)
 		exit_code = builtin_pwd();
-    // ... diğer builtin'ler
-    
-    // Her şeyi temizle ve builtin'in döndürdüğü kod ile çık
-    cleanup_and_exit(shell, all_cmds, all_tokens, exit_code);
+	// ... diğer builtin'ler
+	// Her şeyi temizle ve builtin'in döndürdüğü kod ile çık
+	cleanup_and_exit(shell, all_cmds, all_tokens, exit_code);
 }
 
-static void	handle_child_process(t_command *current, t_shell *shell, \
-			t_token *tokens, t_command *cmds, t_pipe_data *pipe_data)
+static void	handle_child_process(t_command *current, t_shell *shell,
+		t_token *tokens, t_command *cmds, t_pipe_data *pipe_data)
 {
 	setup_child_pipes(pipe_data->prev_fd, pipe_data->fd, current);
 	run_child_command(current, shell, cmds, tokens);
 }
 
 static void	handle_parent_process(t_pid_list **pid_list, pid_t pid,
-			t_pipe_data *pipe_data, t_command *current)
+		t_pipe_data *pipe_data, t_command *current)
 {
 	add_pid(pid_list, pid);
 	if (pipe_data->prev_fd != -1)
@@ -398,7 +391,7 @@ t_shell	init_shell_for_pipe(char **envp)
 	t_shell	shell;
 
 	shell.envp = envp;
-	shell.env_list = NULL; // Pipe'da env_list kullanmıyoruz, leak yaratmasın
+	shell.env_list = NULL;
 	shell.last_exit_code = 0;
 	return (shell);
 }
@@ -416,9 +409,9 @@ static int	setup_pipe_if_needed(t_command *current, int *fd)
 	return (0);
 }
 
-static int	handle_process_creation(t_command *current, t_shell *shell, \
-			t_command *all_cmds, t_token *all_tokens, \
-			t_pipe_data *pipe_data, t_pid_list **pid_list)
+static int	handle_process_creation(t_command *current, t_shell *shell,
+		t_command *all_cmds, t_token *all_tokens, t_pipe_data *pipe_data,
+		t_pid_list **pid_list)
 {
 	pid_t	pid;
 
@@ -430,11 +423,11 @@ static int	handle_process_creation(t_command *current, t_shell *shell, \
 		perror("fork");
 		return (-1);
 	}
-	if (pid == 0) // Child Proses
+	if (pid == 0)
 	{
 		handle_child_process(current, shell, all_tokens, all_cmds, pipe_data);
 	}
-	else // Parent Proses
+	else
 	{
 		handle_parent_process(pid_list, pid, pipe_data, current);
 	}
@@ -486,27 +479,25 @@ void	cleanup_resources(t_pid_list *pid_list, t_shell shell)
 
 int	execute_piped_commands(t_command *cmds, t_token *tokens, t_shell *shell)
 {
-	t_command		*current;
-	t_pid_list		*pid_list;
-	t_pipe_data		pipe_data;
-	int				final_exit_code;
+	t_command	*current;
+	t_pid_list	*pid_list;
+	t_pipe_data	pipe_data;
+	int			final_exit_code;
 
 	current = cmds;
 	pid_list = NULL;
 	pipe_data.prev_fd = -1;
 	while (current)
 	{
-		// handle_process_creation'a artık tüm ana yapıları iletiyoruz.
-		if (handle_process_creation(current, shell, cmds, tokens, \
-									&pipe_data, &pid_list) < 0)
+		if (handle_process_creation(current, shell, cmds, tokens, &pipe_data,
+				&pid_list) < 0)
 		{
-			// Hata durumunda pid listesini temizle
 			wait_and_free_pids(pid_list);
 			return (1);
 		}
 		current = current->next;
 	}
 	final_exit_code = wait_for_all_processes(pid_list);
-	wait_and_free_pids(pid_list); // Free the list itself
+	wait_and_free_pids(pid_list);
 	return (final_exit_code);
 }

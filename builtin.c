@@ -2,28 +2,26 @@
 
 static void	update_pwd_vars(t_env **env_list, char *old_pwd_val)
 {
-	char	new_pwd_val[4096];
+	char	*new_pwd_val;
 	char	*oldpwd_str;
 	char	*pwd_str;
 
-	if (getcwd(new_pwd_val, sizeof(new_pwd_val)) != NULL)
+	new_pwd_val = getcwd(NULL, 0);
+	if (!new_pwd_val)
+		return ;
+	oldpwd_str = ft_strjoin("OLDPWD=", old_pwd_val);
+	if (oldpwd_str)
 	{
-		// OLDPWD'yi güncelle
-		oldpwd_str = ft_strjoin("OLDPWD=", old_pwd_val);
-		if (oldpwd_str)
-		{
-			add_env_list(env_list, oldpwd_str);
-			free(oldpwd_str);
-		}
-		
-		// PWD'yi güncelle
-		pwd_str = ft_strjoin("PWD=", new_pwd_val);
-		if (pwd_str)
-		{
-			add_env_list(env_list, pwd_str);
-			free(pwd_str);
-		}
+		add_env_list(env_list, oldpwd_str);
+		free(oldpwd_str);
 	}
+	pwd_str = ft_strjoin("PWD=", new_pwd_val);
+	if (pwd_str)
+	{
+		add_env_list(env_list, pwd_str);
+		free(pwd_str);
+	}
+	free(new_pwd_val);
 }
 
 static void	print_cd_error(const char *path, const char *msg)
@@ -38,61 +36,102 @@ static void	print_cd_error(const char *path, const char *msg)
 	write(STDERR_FILENO, "\n", 1);
 }
 
-int	builtin_cd(t_command *cmd, t_env **env_list)
+int	count_args(char **args)
 {
-	char	*target_path;
-	char	current_pwd[4096];
-	int		argc;
+	int	i;
 
-	argc = 0;
-	while (cmd->args[argc])
-		argc++;
+	i = 0;
+	while (args[i])
+		i++;
+	return (i);
+}
+
+int	check_too_many_args(int argc)
+{
 	if (argc > 2)
 	{
 		print_cd_error(NULL, "too many arguments");
 		return (1);
 	}
-	if (getcwd(current_pwd, sizeof(current_pwd)) == NULL)
+	return (0);
+}
+
+char	*resolve_target_path(char *arg, int argc, t_env *env_list)
+{
+	char	*path;
+
+	if (argc == 1 || ft_strcmp(arg, "~") == 0)
 	{
-		print_cd_error("getcwd", "error retrieving current directory");
-		return (1);
-	}
-	target_path = cmd->args[1];
-	if (argc == 1 || ft_strcmp(target_path, "~") == 0)
-	{
-		target_path = get_env_value(*env_list, "HOME");
-		if (!target_path || *target_path == '\0')
+		path = get_env_value(env_list, "HOME");
+		if (!path || *path == '\0')
 		{
 			print_cd_error(NULL, "HOME not set");
-			return (1);
+			return (NULL);
 		}
 	}
-	else if (ft_strcmp(target_path, "-") == 0)
+	else if (ft_strcmp(arg, "-") == 0)
 	{
-		target_path = get_env_value(*env_list, "OLDPWD");
-		if (!target_path || *target_path == '\0')
+		path = get_env_value(env_list, "OLDPWD");
+		if (!path || *path == '\0')
 		{
 			print_cd_error(NULL, "OLDPWD not set");
-			return (1);
+			return (NULL);
 		}
-		printf("%s\n", target_path);
+		printf("%s\n", path);
 	}
-	if (chdir(target_path) != 0)
+	else
+		path = arg;
+	return (path);
+}
+
+int	try_change_directory(char *path)
+{
+	if (chdir(path) != 0)
 	{
-		print_cd_error(target_path, "No such file or directory");
+		print_cd_error(path, "No such file or directory");
+		return (1);
+	}
+	return (0);
+}
+
+int	builtin_cd(t_command *cmd, t_env **env_list)
+{
+	char	*current_pwd;
+	char	*target_path;
+	int		argc;
+
+	argc = count_args(cmd->args);
+	if (check_too_many_args(argc))
+		return (1);
+	current_pwd = getcwd(NULL, 0);
+	if (!current_pwd)
+		return (print_cd_error("getcwd", "error retrieving current directory"),
+			1);
+	target_path = resolve_target_path(cmd->args[1], argc, *env_list);
+	if (!target_path)
+	{
+		free(current_pwd);
+		return (1);
+	}
+	if (try_change_directory(target_path))
+	{
+		free(current_pwd);
 		return (1);
 	}
 	update_pwd_vars(env_list, current_pwd);
+	free(current_pwd);
 	return (0);
 }
 
 int	builtin_pwd(void)
 {
-	char	cwd[4096];
+	char	*cwd;
 
-	if (getcwd(cwd, sizeof(cwd)) != NULL)
+	cwd = getcwd(NULL, 0);
+	if (cwd != NULL)
 	{
 		printf("%s\n", cwd);
+		free(cwd);
 		return (0);
 	}
 	else
@@ -102,32 +141,38 @@ int	builtin_pwd(void)
 	}
 }
 
+int	should_print_newline(char **args, int *i)
+{
+	int	j;
+	int	newline;
+
+	newline = 1;
+	while (args[++(*i)])
+	{
+		if (args[*i][0] != '-')
+			break ;
+		j = 0;
+		while (args[*i][++j] == 'n')
+			;
+		if (args[*i][j] != '\0')
+			break ;
+		newline = 0;
+	}
+	return (newline);
+}
+
 int	builtin_echo(t_command *cmd)
 {
 	int	i;
 	int	newline;
-	int	j;
 
-	i = 1;
-	newline = 1;
-	while (cmd->args[i])
-	{
-		if (cmd->args[i][0] != '-')
-			break ;
-		j = 1;
-		while (cmd->args[i][j] == 'n')
-			j++;
-		if (cmd->args[i][j] != '\0')
-			break ;
-		newline = 0;
-		i++;
-	}
+	i = 0;
+	newline = should_print_newline(cmd->args, &i);
 	while (cmd->args[i])
 	{
 		write(STDOUT_FILENO, cmd->args[i], ft_strlen(cmd->args[i]));
-		if (cmd->args[i + 1])
+		if (cmd->args[++i])
 			write(STDOUT_FILENO, " ", 1);
-		i++;
 	}
 	if (newline)
 		write(STDOUT_FILENO, "\n", 1);
@@ -170,21 +215,21 @@ static void	add_to_history_list(t_history **head, char *line)
 
 void	builtin_history(char *line)
 {
-	static t_history	*head = NULL;
-	static int			count = 0;
+	static t_history	*head;
+	static int			count;
 
+	head = NULL;
+	count = 0;
 	if (line == NULL)
 	{
-		// Cleanup çağrısı
 		if (head)
 		{
 			free_history_list(head);
 			head = NULL;
 			count = 0;
 		}
-		return;
+		return ;
 	}
-	
 	add_to_history_list(&head, line);
 	count++;
 	add_history(line);
@@ -197,17 +242,13 @@ void	cleanup_history(void)
 
 static int	is_valid_first_char(char c)
 {
-	return ((c >= 'a' && c <= 'z') ||
-			(c >= 'A' && c <= 'Z') ||
-			c == '_');
+	return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_');
 }
 
 static int	is_valid_identifier_char(char c)
 {
-	return ((c >= 'a' && c <= 'z') ||
-			(c >= 'A' && c <= 'Z') ||
-			(c >= '0' && c <= '9') ||
-			c == '_');
+	return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0'
+			&& c <= '9') || c == '_');
 }
 
 int	is_valid_identifier(const char *str)
@@ -261,21 +302,12 @@ static t_env	*create_env_node_from_envp(char *env_str)
 	return (new_node);
 }
 
-static int	compare_strings(const void *a, const void *b)
+static void	free_string_array(char **arr)
 {
-	return (ft_strcmp(*(const char **)a, *(const char **)b));
-}
-
-// Değiştirilmiş: print_exported_vars fonksiyonu
-
-// YARDIMCI BİR FONKSİYON: char ** dizisini ve içindeki stringleri temizler.
-// Bunu free_utils.c dosyana da ekleyebilirsin.
-static void free_string_array(char **arr)
-{
-	int i;
+	int	i;
 
 	if (!arr)
-		return;
+		return ;
 	i = 0;
 	while (arr[i])
 	{
@@ -285,102 +317,117 @@ static void free_string_array(char **arr)
 	free(arr);
 }
 
-
-void print_exported_vars(t_env *env_list)
+char	**env_list_to_array(t_env *env_list, int count)
 {
+	char	**arr;
 	int		i;
-	int		count;
-	char	**sorted_env;
-	t_env	*temp;
+	char	*key_eq;
+	char	*tmp;
 
-	// 1. Ortam değişkenlerinin sayısını bul
-	count = 0;
-	temp = env_list;
-	while (temp)
-	{
-		count++;
-		temp = temp->next;
-	}
-	if (count == 0)
-		return;
-
-	// 2. String dizisi için bellek ayır
-	sorted_env = malloc(sizeof(char *) * (count + 1));
-	if (!sorted_env)
-		return;
-
-	// 3. Diziyi "KEY=VALUE" formatında doldur
+	arr = malloc(sizeof(char *) * (count + 1));
 	i = 0;
-	temp = env_list;
-	while (temp)
+	while (env_list)
 	{
-		char *key_part = ft_strjoin(temp->key, "=\""); // "KEY=\"" kısmı
-		char *full_var = ft_strjoin(key_part, temp->value); // "KEY=\"VALUE" kısmı
-		free(key_part); // Geçici parçayı temizle
-		sorted_env[i] = ft_strjoin(full_var, "\""); // Son tırnağı ekle: "KEY=\"VALUE\""
-		free(full_var); // Geçici parçayı temizle
-		temp = temp->next;
+		key_eq = ft_strjoin(env_list->key, "=\"");
+		tmp = ft_strjoin(key_eq, env_list->value);
+		free(key_eq);
+		arr[i] = ft_strjoin(tmp, "\"");
+		free(tmp);
+		env_list = env_list->next;
 		i++;
 	}
-	sorted_env[i] = NULL;
+	arr[i] = NULL;
+	return (arr);
+}
 
-	// 4. Diziyi alfabetik olarak sırala
-	qsort(sorted_env, count, sizeof(char *), compare_strings);
+void	bubble_sort(char **arr, int count)
+{
+	char	*tmp;
+	int		i;
+	int		j;
 
-	// 5. Sıralanmış diziyi "declare -x" formatında yazdır
+	i = 0;
+	while (i < count - 1)
+	{
+		j = 0;
+		while (j < count - i - 1)
+		{
+			if (ft_strcmp(arr[j], arr[j + 1]) > 0)
+			{
+				tmp = arr[j];
+				arr[j] = arr[j + 1];
+				arr[j + 1] = tmp;
+			}
+			j++;
+		}
+		i++;
+	}
+}
+
+void	print_exported_vars(t_env *env_list)
+{
+	int		count;
+	t_env	*tmp;
+	char	**arr;
+	int		i;
+
+	count = 0;
+	tmp = env_list;
+	while (tmp)
+	{
+		count++;
+		tmp = tmp->next;
+	}
+	if (count == 0)
+		return ;
+	arr = env_list_to_array(env_list, count);
+	if (!arr)
+		return ;
+	bubble_sort(arr, count);
 	i = 0;
 	while (i < count)
 	{
-		printf("declare -x %s\n", sorted_env[i]);
+		printf("declare -x %s\n", arr[i]);
 		i++;
 	}
-
-	// 6. *** EN ÖNEMLİ DÜZELTME: AYRILAN TÜM BELLEĞİ SERBEST BIRAK ***
-	free_string_array(sorted_env); // Hem diziyi hem de içindeki tüm stringleri temizle
+	free_string_array(arr);
 }
 
+int	handle_export_with_value(char *arg, char ***envp, t_env **env_list)
+{
+	add_env_list(env_list, arg);
+	*envp = add_envp(*envp, arg);
+	return (0);
+}
 
+int	handle_export_without_value(char *arg, char ***envp, t_env **env_list)
+{
+	char	*existing_value;
+	char	*new_var;
+
+	existing_value = get_env_value(*env_list, arg);
+	if (existing_value)
+		return (0);
+	new_var = ft_strjoin(arg, "=");
+	if (!new_var)
+		return (0);
+	add_env_list(env_list, new_var);
+	*envp = add_envp(*envp, new_var);
+	free(new_var);
+	return (0);
+}
 
 int	export_single_var(char *arg, char ***envp, t_env **env_list)
 {
-	char	*equal_sign;
-	char	*existing_value;
-
 	if (!is_valid_identifier(arg))
 	{
 		print_export_error(arg);
 		return (1);
 	}
-	
-	equal_sign = ft_strchr(arg, '=');
-	if (equal_sign)
-	{
-		// VAR=value formatı
-		add_env_list(env_list, arg);
-		*envp = add_envp(*envp, arg);
-	}
+	if (ft_strchr(arg, '='))
+		return (handle_export_with_value(arg, envp, env_list));
 	else
-	{
-		// Sadece VAR formatı - mevcut değeri koru, sadece export et
-		existing_value = get_env_value(*env_list, arg);
-		if (existing_value)
-		{
-			// Zaten var, sadece export edilmiş olarak işaretle (zaten export edilmiş)
-			return (0);
-		}
-		else
-		{
-			// Yoksa boş değerle oluştur
-			char *new_var = ft_strjoin(arg, "=");
-			if (new_var)
-			{
-				add_env_list(env_list, new_var);
-				*envp = add_envp(*envp, new_var);
-				free(new_var);
-			}
-		}
-	}
-	return (0);
+		return (handle_export_without_value(arg, envp, env_list));
 }
 
 int	builtin_export(t_command *cmd, char ***envp, t_env **env_list)
@@ -393,7 +440,6 @@ int	builtin_export(t_command *cmd, char ***envp, t_env **env_list)
 		print_exported_vars(*env_list);
 		return (0);
 	}
-	
 	exit_code = 0;
 	i = 1;
 	while (cmd->args[i])
@@ -417,33 +463,26 @@ int	builtin_unset(t_command *cmd, char ***envp, t_env **env_list)
 	return (0);
 }
 
-int	builtin_exit(t_command *cmd)
+int	builtin_exit(t_command *cmd, int *real_exit_code)
 {
-	int	exit_code;
-
 	printf("exit\n");
 	if (!cmd->args[1])
-	{
-		// Cleanup yapılacak, exit code 0
-		return (-1); // Özel return kodu
-	}
+		return (EXIT_NO_ARG);
 	if (!is_num(cmd->args[1]))
 	{
-		write(STDERR_FILENO, "minishell: exit: numeric argument required\n", 43);
-		return (-2); // Özel return kodu, exit code 2
+		write(STDERR_FILENO, "minishell: exit: numeric argument required\n",
+			43);
+		return (EXIT_NOT_NUMERIC);
 	}
 	if (cmd->args[2])
 	{
 		write(STDERR_FILENO, "minishell: exit: too many arguments\n", 36);
-		return (1);
+		return (EXIT_TOO_MANY_ARGS);
 	}
-	exit_code = ft_atoi(cmd->args[1]);
-	// Bash gibi exit code hesapla: 0-255 arası
-	if (exit_code < 0)
-		exit_code = 256 + (exit_code % 256);
-	else
-		exit_code = exit_code % 256;
-	return (-3 - exit_code); // Özel return kodu, negatif offset
+	*real_exit_code = ft_atoi(cmd->args[1]) % 256;
+	if (*real_exit_code < 0)
+		*real_exit_code += 256;
+	return (EXIT_ARG_VALUE);
 }
 
 char	**copy_env(char **envp)
@@ -599,8 +638,6 @@ t_env	*add_env_list(t_env **head, char *input)
 	append_env_node(head, new_node);
 	return (new_node);
 }
-
-
 
 static void	add_env_node_to_list(t_env **head, t_env **current, t_env *new_node)
 {

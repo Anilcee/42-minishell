@@ -17,34 +17,27 @@ int	check_absolute_path(char *command_name)
 	return (CMD_SUCCESS);
 }
 
-static int	find_in_path_safe(char *command_name, t_shell *shell, char **program_path)
+static char	*get_path_env_value(t_shell *shell)
 {
-	char	*path_env;
-	char	**paths;
-	int		i;
+	int	i;
 
 	if (shell->env_list)
-		path_env = get_env_value(shell->env_list, "PATH");
-	else
+		return (get_env_value(shell->env_list, "PATH"));
+	i = 0;
+	while (shell->envp && shell->envp[i])
 	{
-		// Pipe'da env_list NULL olabilir, envp'den PATH'i al
-		path_env = NULL;
-		i = 0;
-		while (shell->envp && shell->envp[i])
-		{
-			if (ft_strncmp(shell->envp[i], "PATH=", 5) == 0)
-			{
-				path_env = shell->envp[i] + 5;
-				break;
-			}
-			i++;
-		}
+		if (ft_strncmp(shell->envp[i], "PATH=", 5) == 0)
+			return (shell->envp[i] + 5);
+		i++;
 	}
-	
-	if (!path_env)
-		return (PATH_NOT_SET);
-	
-	paths = ft_split(path_env, ':');
+	return (NULL);
+}
+
+static int	search_command_in_paths(char **paths, char *command_name,
+		char **program_path)
+{
+	int	i;
+
 	i = -1;
 	while (paths[++i])
 	{
@@ -59,6 +52,19 @@ static int	find_in_path_safe(char *command_name, t_shell *shell, char **program_
 	}
 	free_paths_array(paths);
 	return (CMD_NOT_FOUND);
+}
+
+static int	find_in_path_safe(char *command_name, t_shell *shell,
+		char **program_path)
+{
+	char	*path_env;
+	char	**paths;
+
+	path_env = get_path_env_value(shell);
+	if (!path_env)
+		return (PATH_NOT_SET);
+	paths = ft_split(path_env, ':');
+	return (search_command_in_paths(paths, command_name, program_path));
 }
 
 char	*find_in_path(char *command_name, t_shell *shell)
@@ -88,8 +94,6 @@ int	execute_child_process(char *program_path, t_command *cmd, char **envp)
 	exit(127);
 }
 
-
-
 int	get_exit_status(int status)
 {
 	if (ft_wifexited(status))
@@ -113,7 +117,8 @@ static int	handle_absolute_path(char *command_name, char **program_path)
 	return (0);
 }
 
-static int	handle_relative_path(char *command_name, char **program_path, t_shell *shell)
+static int	handle_relative_path(char *command_name, char **program_path,
+		t_shell *shell)
 {
 	return (find_in_path_safe(command_name, shell, program_path));
 }
