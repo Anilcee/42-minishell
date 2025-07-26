@@ -167,12 +167,11 @@ static int	handle_pipes(t_command *cmds, t_token *tokens, t_shell *shell)
 	return (0);
 }
 
-static int	handle_redirections_block(t_command *cmds, int *saved_stdout,
-		int *saved_stdin, t_shell *shell)
+static int	handle_redirections_block(t_redirection_context *ctx)
 {
-	if (!setup_redirections(cmds, saved_stdout, saved_stdin))
+	if (!setup_redirections(ctx->cmds, ctx->saved_stdout, ctx->saved_stdin))
 	{
-		shell->last_exit_code = 1;
+		ctx->shell->last_exit_code = 1;
 		return (0);
 	}
 	return (1);
@@ -196,14 +195,19 @@ static int	handle_builtin_or_external(t_command *cmds, t_shell *shell,
 
 int	execute_command(t_command *cmds, t_token *tokens, t_shell *shell)
 {
-	int	saved_stdout;
-	int	saved_stdin;
+	int						saved_stdout;
+	int						saved_stdin;
+	t_redirection_context	ctx;
 
 	if (!validate_command(cmds, shell))
 		return (1);
 	if (handle_pipes(cmds, tokens, shell))
 		return (1);
-	if (!handle_redirections_block(cmds, &saved_stdout, &saved_stdin, shell))
+	ctx.cmds = cmds;
+	ctx.saved_stdout = &saved_stdout;
+	ctx.saved_stdin = &saved_stdin;
+	ctx.shell = shell;
+	if (!handle_redirections_block(&ctx))
 		return (1);
 	if (!handle_builtin_or_external(cmds, shell, saved_stdout, saved_stdin))
 		return (0);

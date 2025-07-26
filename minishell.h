@@ -24,8 +24,6 @@ typedef enum e_error_code
 	PATH_NOT_SET = -5
 }						t_error_code;
 
-
-
 typedef enum e_redirect_type
 {
 	REDIR_IN,
@@ -98,6 +96,24 @@ typedef struct s_pipe_data
 	int					fd[2];
 }						t_pipe_data;
 
+typedef struct s_execution_context
+{
+	t_command			*current;
+	t_shell				*shell;
+	t_command			*all_cmds;
+	t_token				*all_tokens;
+	t_pipe_data			pipe_data;
+	t_pid_list			**pid_list;
+}						t_execution_context;
+
+typedef struct s_redirection_context
+{
+	t_command			*cmds;
+	int					*saved_stdout;
+	int					*saved_stdin;
+	t_shell				*shell;
+}						t_redirection_context;
+
 typedef enum e_exit_result
 {
 	EXIT_OK = 0,
@@ -105,7 +121,7 @@ typedef enum e_exit_result
 	EXIT_NOT_NUMERIC = 2,
 	EXIT_NO_ARG = 3,
 	EXIT_ARG_VALUE = 4 // Gerçek exit kodu pointer ile dönecek
-} t_exit_result;
+}						t_exit_result;
 
 int						ft_wifexited(int status);
 int						ft_wexitstatus(int status);
