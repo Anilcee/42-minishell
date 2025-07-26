@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parser.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ancengiz <ancengiz@student.42istanbul.c    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/27 01:35:51 by ancengiz          #+#    #+#             */
+/*   Updated: 2025/07/27 01:35:52 by ancengiz         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
 t_command	*create_new_command(void)
@@ -101,6 +113,12 @@ static int	handle_token(t_token **tokens, t_command **current_cmd,
 {
 	if ((*tokens)->t_type == T_PIPE)
 	{
+		if (!*current_cmd || !(*current_cmd)->args)
+		{
+			write(2, "minishell: syntax error near unexpected token `|'\n", 49);
+			free_commands(*head);
+			return (0);
+		}
 		handle_pipe_token(current_cmd, tokens);
 		return (1);
 	}
@@ -117,8 +135,6 @@ static int	handle_token(t_token **tokens, t_command **current_cmd,
 	{
 		if (!handle_redirect_token(tokens, *current_cmd, head))
 			return (0);
-		*tokens = (*tokens)->next;
-		return (1);
 	}
 	*tokens = (*tokens)->next;
 	return (1);
@@ -135,6 +151,12 @@ t_command	*parse_tokens(t_token *tokens)
 	{
 		if (!handle_token(&tokens, &current_cmd, &head))
 			return (NULL);
+	}
+	if (current_cmd && !current_cmd->args && !current_cmd->redirects)
+	{
+		write(2, "minishell: syntax error near unexpected token `|'\n", 49);
+		free_commands(head);
+		return (NULL);
 	}
 	return (head);
 }
