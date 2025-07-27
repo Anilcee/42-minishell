@@ -6,31 +6,11 @@
 /*   By: ancengiz <ancengiz@student.42istanbul.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:53 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/07/27 01:35:54 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/07/27 13:23:05 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
-
-int	ft_wifexited(int status)
-{
-	return ((status & 0x7f) == 0);
-}
-
-int	ft_wexitstatus(int status)
-{
-	return ((status & 0xff00) >> 8);
-}
-
-int	ft_wifsignaled(int status)
-{
-	return ((status & 0x7f) != 0 && (status & 0x7f) != 0x7f);
-}
-
-int	ft_wtermsig(int status)
-{
-	return (status & 0x7f);
-}
 
 void	execute_builtin_commands(t_command *cmd, t_shell *shell)
 {
@@ -480,10 +460,10 @@ static int	handle_process_creation(t_execution_context *ctx)
 
 static int	calculate_final_exit_code(int status)
 {
-	if (ft_wifexited(status))
-		return (ft_wexitstatus(status));
-	else if (ft_wifsignaled(status))
-		return (128 + ft_wtermsig(status));
+	if (WIFEXITED(status))
+		return (WEXITSTATUS(status));
+	else if (WIFSIGNALED(status))
+		return (128 + WTERMSIG(status));
 	return (0);
 }
 
@@ -498,7 +478,7 @@ static int	wait_for_all_processes(t_pid_list *pid_list)
 	while (temp)
 	{
 		waitpid(temp->pid, &status, 0);
-		if (ft_wifsignaled(status) && ft_wtermsig(status) == SIGPIPE)
+		if (WIFSIGNALED(status) && WTERMSIG(status) == SIGPIPE)
 			write(STDERR_FILENO, "Broken pipe\n", 12);
 		if (temp->next == NULL)
 			final_exit_code = calculate_final_exit_code(status);

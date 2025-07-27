@@ -108,10 +108,10 @@ int	execute_child_process(char *program_path, t_command *cmd, char **envp)
 
 int	get_exit_status(int status)
 {
-	if (ft_wifexited(status))
-		return (ft_wexitstatus(status));
-	else if (ft_wifsignaled(status))
-		return (128 + ft_wtermsig(status));
+	if (WIFEXITED(status))
+		return (WEXITSTATUS(status));
+	else if (WIFSIGNALED(status))
+		return (128 + WTERMSIG(status));
 	else
 		return (1);
 }

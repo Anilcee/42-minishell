@@ -6,7 +6,7 @@
 /*   By: ancengiz <ancengiz@student.42istanbul.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:46 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/07/27 01:35:47 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/07/27 14:40:16 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,13 +132,8 @@ typedef enum e_exit_result
 	EXIT_TOO_MANY_ARGS = 1,
 	EXIT_NOT_NUMERIC = 2,
 	EXIT_NO_ARG = 3,
-	EXIT_ARG_VALUE = 4 // Gerçek exit kodu pointer ile dönecek
+	EXIT_ARG_VALUE = 4
 }						t_exit_result;
-
-int						ft_wifexited(int status);
-int						ft_wexitstatus(int status);
-int						ft_wifsignaled(int status);
-int						ft_wtermsig(int status);
 
 char					**ft_split(const char *str, char separator);
 char					*ft_strjoin(char const *s1, char const *s2);
@@ -169,6 +164,7 @@ t_command				*parse_tokens(t_token *tokens);
 t_env					*add_env_list(t_env **head, char *input);
 char					**add_envp(char **envp, char *input);
 t_env					*envp_to_list(char **envp);
+char					**env_list_to_array(t_env *env_list, int count);
 int						builtin_unset(t_command *cmd, char ***envp,
 							t_env **env_list);
 void					unset_from_env_list(t_env **head, const char *key);
@@ -176,6 +172,8 @@ char					**unset_from_envp(char **envp, const char *key);
 char					*get_env_value(t_env *env_list, const char *key);
 char					*ft_strndup(const char *s, size_t n);
 int						ft_strncmp(const char *s1, const char *s2, size_t n);
+void					print_cd_error(const char *path, const char *msg);
+void					update_pwd_vars(t_env **env_list, char *old_pwd_val);
 int						is_num(char *str);
 int						ft_isalnum(char c);
 int						ft_strcmp(const char *s1, const char *s2);
@@ -189,6 +187,7 @@ int						is_builtin(const char *cmd);
 void					cleanup_and_exit(t_shell *shell, t_command *all_cmds,
 							t_token *all_tokens, int exit_code);
 int						ft_atoi(const char *str);
+void					bubble_sort(char **arr, int count);
 void					free_env_list(t_env *head);
 void					free_tokens(t_token *head);
 void					free_commands(t_command *head);
@@ -199,12 +198,26 @@ void					free_history_list(t_history *head);
 int						check_absolute_path(char *command_name);
 char					*find_in_path(char *command_name, t_shell *shell);
 int						execute_child_process(char *program_path,
-							t_command *cmd, char **envp);
+							t_command *cmd,
+							char **envp);
 void					free_paths_array(char **paths);
 int						get_exit_status(int status);
+void					bubble_sort(char **arr, int count);
+void					free_string_array(char **arr);
+t_env					*create_new_env_node(char *key, char *value);
+void					append_env_node(t_env **head, t_env *new_node);
+t_env					*update_existing_env_node(t_env *current, char *key,
+							char *value);
+t_env					*create_env_node_from_envp(char *env_str);
+void					add_env_node_to_list(t_env **head, t_env **current,
+							t_env *new_node);
+void					print_exported_vars(t_env *env_list);
+void					print_export_error(char *input);
 void					handle_external_error2(t_command *cmds, int result,
 							t_shell *shell);
 void					print_error_message(char *cmd_name, char *error_msg,
 							int exit_code, t_shell *shell);
-
+int						ft_clean(char **srg, int i);
+char					*process_word_with_expansion(char *input, int start,
+							int end, t_shell *shell);
 #endif
