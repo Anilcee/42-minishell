@@ -6,7 +6,7 @@
 /*   By: ancengiz <ancengiz@student.42istanbul.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:46 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/07/27 14:40:16 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/07/27 16:20:50 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,6 +161,18 @@ int						has_pipe(t_command *cmds);
 int						execute_piped_commands(t_command *cmds, t_token *tokens,
 							t_shell *shell);
 t_command				*parse_tokens(t_token *tokens);
+t_command				*create_new_command(void);
+void					add_arg(t_command *cmd, char *arg);
+void					add_redirect(t_command *cmd, t_redirect_type type,
+							char *filename);
+int						handle_redirect_token(t_token **tokens,
+							t_command *current_cmd, t_command **head);
+void					handle_word_token(t_command *current_cmd,
+							t_token *tokens);
+void					handle_pipe_token(t_command **current_cmd,
+							t_token **tokens);
+int						handle_token(t_token **tokens, t_command **current_cmd,
+							t_command **head);
 t_env					*add_env_list(t_env **head, char *input);
 char					**add_envp(char **envp, char *input);
 t_env					*envp_to_list(char **envp);
@@ -220,4 +232,7 @@ void					print_error_message(char *cmd_name, char *error_msg,
 int						ft_clean(char **srg, int i);
 char					*process_word_with_expansion(char *input, int start,
 							int end, t_shell *shell);
+int						search_command_in_paths(char **paths, char *command_name,
+							char **program_path);
+char					*get_path_env_value(t_shell *shell);
 #endif

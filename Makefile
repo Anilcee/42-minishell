@@ -10,9 +10,9 @@ SRCS        =   minishell.c				\
 				utils5.c				\
 				redirection.c			\
 				builtin.c				\
-				external.c				\
 				tokenizer.c				\
 				parser.c				\
+				parser_utils.c			\
 				free.c					\
 				free2.c					\
 				builtin_cd.c			\
@@ -24,6 +24,8 @@ SRCS        =   minishell.c				\
 				builtin_exit.c			\
 				env_list.c				\
 				env_node.c				\
+				external_utils_1.c		\
+				external_utils_2.c		\
 				expand.c				
 OBJS        = $(SRCS:.c=.o)
 HEADER      = minishell.h
