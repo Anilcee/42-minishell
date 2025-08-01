@@ -24,12 +24,16 @@ SRCS        =   minishell.c						\
 				builtin/builtin_history.c		\
 				builtin/builtin_pwd.c			\
 				builtin/builtin_unset.c			\
+				builtin/builtin_executor.c		\
 				env_list.c						\
 				env_node.c						\
 				external_utils_1.c				\
 				external_utils_2.c				\
 				char_utils.c					\
-				error.c							\
+				error_handler.c					\
+				command_executor.c				\
+				signal_handler.c				\
+				redirection_handler.c			\
 				expand.c				
 OBJS        = $(SRCS:.c=.o)
 HEADER      = minishell.h

@@ -6,7 +6,7 @@
 /*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:46 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 11:19:08 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 12:29:21 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,6 +135,8 @@ typedef enum e_exit_result
 	EXIT_ARG_VALUE = 4
 }						t_exit_result;
 
+extern int				g_signal_received;
+
 char					**ft_split(const char *str, char separator);
 char					*ft_strjoin(char const *s1, char const *s2);
 char					*ft_strdup(const char *s);
@@ -248,5 +250,18 @@ char					*process_word_token(char *input, int *i,
 							t_shell *shell);
 char					*process_word_no_expansion(char *input, int start,
 							int end);
+int						validate_command(t_command *cmds, t_shell *shell);
+int						handle_pipes(t_command *cmds, t_token *tokens,
+							t_shell *shell);
+int						handle_redirections_block(t_redirection_context *ctx);
+int						handle_builtin_or_external(t_command *cmds,
+							t_shell *shell, int saved_stdout, int saved_stdin);
+void					restore_redirections(int saved_stdout, int saved_stdin);
+void					handle_signal_interrupt(t_shell *shell);
+void					setup_signals(void);
+void					handle_external_error(t_command *cmds, int result,
+							t_shell *shell);
+int						setup_redirections(t_command *cmds, int *saved_stdout,
+							int *saved_stdin);
 
 #endif
