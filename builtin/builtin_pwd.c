@@ -1,16 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   builtin.c                                          :+:      :+:    :+:   */
+/*   builtin_pwd.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42istanbul.c    +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:32 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/07/27 13:19:11 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 10:47:53 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "../minishell.h"
 
 void	update_pwd_vars(t_env **env_list, char *old_pwd_val)
 {
@@ -36,18 +36,6 @@ void	update_pwd_vars(t_env **env_list, char *old_pwd_val)
 	free(new_pwd_val);
 }
 
-void	print_cd_error(const char *path, const char *msg)
-{
-	write(STDERR_FILENO, "minishell: cd: ", 15);
-	if (path)
-	{
-		write(STDERR_FILENO, path, ft_strlen(path));
-		write(STDERR_FILENO, ": ", 2);
-	}
-	write(STDERR_FILENO, msg, ft_strlen(msg));
-	write(STDERR_FILENO, "\n", 1);
-}
-
 int	builtin_pwd(void)
 {
 	char	*cwd;
@@ -64,22 +52,6 @@ int	builtin_pwd(void)
 		perror("minishell: pwd");
 		return (1);
 	}
-}
-
-void	cleanup_history(void)
-{
-	builtin_history(NULL);
-}
-
-static int	is_valid_first_char(char c)
-{
-	return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_');
-}
-
-static int	is_valid_identifier_char(char c)
-{
-	return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0'
-			&& c <= '9') || c == '_');
 }
 
 int	is_valid_identifier(const char *str)
@@ -99,11 +71,4 @@ int	is_valid_identifier(const char *str)
 		i++;
 	}
 	return (1);
-}
-
-void	print_export_error(char *input)
-{
-	write(STDERR_FILENO, "minishell: export: `", 20);
-	write(STDERR_FILENO, input, ft_strlen(input));
-	write(STDERR_FILENO, "': not a valid identifier\n", 26);
 }

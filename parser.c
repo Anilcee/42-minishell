@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42istanbul.c    +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:51 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/07/27 16:20:50 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 10:33:11 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,8 +69,6 @@ void	add_redirect(t_command *cmd, t_redirect_type type, char *filename)
 		temp->next = new_redirect;
 	}
 }
-
-
 
 t_command	*parse_tokens(t_token *tokens)
 {

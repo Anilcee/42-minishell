@@ -3,14 +3,19 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_history.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42istanbul.c    +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 02:39:23 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/07/27 02:39:36 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 10:43:16 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "../minishell.h"
+
+void	cleanup_history(void)
+{
+	builtin_history(NULL);
+}
 
 static void	add_to_history_list(t_history **head, char *line)
 {

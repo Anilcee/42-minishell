@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_echo.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42istanbul.c    +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 02:02:28 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/07/27 12:34:29 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 10:42:58 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "../minishell.h"
 
 int	should_print_newline(char **args, int *i)
 {

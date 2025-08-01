@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   external_utils_1.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42istanbul.c    +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:36 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/07/27 15:54:09 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 10:33:41 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,4 +93,3 @@ int	search_command_in_paths(char **paths, char *command_name,
 	free_paths_array(paths);
 	return (CMD_NOT_FOUND);
 }
-

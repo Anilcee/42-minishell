@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42istanbul.c    +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:46 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/07/27 16:20:50 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 11:19:08 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -210,8 +210,7 @@ void					free_history_list(t_history *head);
 int						check_absolute_path(char *command_name);
 char					*find_in_path(char *command_name, t_shell *shell);
 int						execute_child_process(char *program_path,
-							t_command *cmd,
-							char **envp);
+							t_command *cmd, char **envp);
 void					free_paths_array(char **paths);
 int						get_exit_status(int status);
 void					bubble_sort(char **arr, int count);
@@ -232,7 +231,22 @@ void					print_error_message(char *cmd_name, char *error_msg,
 int						ft_clean(char **srg, int i);
 char					*process_word_with_expansion(char *input, int start,
 							int end, t_shell *shell);
-int						search_command_in_paths(char **paths, char *command_name,
-							char **program_path);
+int						search_command_in_paths(char **paths,
+							char *command_name, char **program_path);
 char					*get_path_env_value(t_shell *shell);
+int						is_valid_first_char(char c);
+int						is_valid_identifier_char(char c);
+int						ft_isspace(int c);
+int						is_special_char(char c);
+int						is_quote(char c);
+void					add_token_to_list(t_token **head, t_token **tail,
+							char *word, char quote_type);
+t_token_type			get_token_type(char *value);
+void					handle_special_chars(char *input, int *i,
+							t_token **head, t_token **tail);
+char					*process_word_token(char *input, int *i,
+							t_shell *shell);
+char					*process_word_no_expansion(char *input, int start,
+							int end);
+
 #endif

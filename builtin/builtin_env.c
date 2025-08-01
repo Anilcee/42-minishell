@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_env.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42istanbul.c    +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 12:35:42 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/07/27 13:18:22 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 10:43:03 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "../minishell.h"
 
 char	**copy_env(char **envp)
 {

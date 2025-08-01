@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_export.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42istanbul.c    +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 10:37:12 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/07/27 11:40:18 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 10:43:10 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "../minishell.h"
 
 void	print_exported_vars(t_env *env_list)
 {
