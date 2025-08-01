@@ -3,21 +3,22 @@
 /*                                                        :::      ::::::::   */
 /*   redirection_and_heredoc_utils.c                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 15:49:39 by oislamog          #+#    #+#             */
-/*   Updated: 2025/08/01 16:58:59 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/01 20:09:00 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	handle_input_redirect(t_redirect *redir, int *in_fd, int out_fd)
+int	handle_input_redirect(t_redirect *redir, int *in_fd, int out_fd,
+		t_shell *shell)
 {
 	if (*in_fd != -1)
 		close(*in_fd);
 	if (redir->type == REDIR_HEREDOC)
-		*in_fd = handle_heredoc(redir->filename);
+		*in_fd = handle_heredoc(redir->filename, shell);
 	else
 		*in_fd = open(redir->filename, O_RDONLY);
 	if (*in_fd < 0)
@@ -66,7 +67,7 @@ void	apply_redirections(int in_fd, int out_fd)
 	}
 }
 
-int	handle_redirections(t_command *cmd)
+int	handle_redirections(t_command *cmd, t_shell *shell)
 {
 	t_redirect	*redir;
 	int			in_fd;
@@ -79,7 +80,7 @@ int	handle_redirections(t_command *cmd)
 	{
 		if (redir->type == REDIR_IN || redir->type == REDIR_HEREDOC)
 		{
-			if (handle_input_redirect(redir, &in_fd, out_fd) < 0)
+			if (handle_input_redirect(redir, &in_fd, out_fd, shell) < 0)
 				return (-1);
 		}
 		else if (redir->type == REDIR_OUT || redir->type == REDIR_APPEND)
@@ -93,29 +94,27 @@ int	handle_redirections(t_command *cmd)
 	return (0);
 }
 
-int	handle_heredoc(const char *delimiter)
+int	handle_heredoc(const char *delimiter, t_shell *shell)
 {
 	int		pipefd[2];
 	char	*line;
+	char	*expanded;
 
-	if (pipe(pipefd) == -1)
-	{
-		perror("pipe");
-		return (-1);
-	}
 	line = NULL;
 	while (1)
 	{
-		line = readline("heredoc> ");
+		line = readline("> ");
 		if (!line || ft_strcmp(line, delimiter) == 0)
 		{
 			if (line)
 				free(line);
 			break ;
 		}
-		write(pipefd[1], line, ft_strlen(line));
-		write(pipefd[1], "\n", 1);
+		expanded = process_word_with_expansion(line, 0, ft_strlen(line), shell);
 		free(line);
+		write(pipefd[1], expanded, ft_strlen(expanded));
+		write(pipefd[1], "\n", 1);
+		free(expanded);
 	}
 	close(pipefd[1]);
 	return (pipefd[0]);

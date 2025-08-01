@@ -3,20 +3,21 @@
 /*                                                        :::      ::::::::   */
 /*   redirection_handler.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:31:17 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 16:12:24 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/01 20:09:11 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	setup_redirections(t_command *cmds, int *saved_stdout, int *saved_stdin)
+int	setup_redirections(t_command *cmds, int *saved_stdout, int *saved_stdin,
+		t_shell *shell)
 {
 	*saved_stdout = dup(STDOUT_FILENO);
 	*saved_stdin = dup(STDIN_FILENO);
-	if (handle_redirections(cmds) < 0)
+	if (handle_redirections(cmds, shell) < 0)
 	{
 		dup2(*saved_stdout, STDOUT_FILENO);
 		dup2(*saved_stdin, STDIN_FILENO);

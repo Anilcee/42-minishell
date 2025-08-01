@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   pipe_utils.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 15:47:07 by oislamog          #+#    #+#             */
-/*   Updated: 2025/08/01 16:36:31 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/01 20:50:13 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,5 +63,18 @@ void	add_pid(t_pid_list **head, pid_t pid)
 		while (temp->next)
 			temp = temp->next;
 		temp->next = new_node;
+	}
+}
+
+void	wait_and_free_pids(t_pid_list *head)
+{
+	t_pid_list	*temp;
+
+	while (head)
+	{
+		waitpid(head->pid, NULL, 0);
+		temp = head;
+		head = head->next;
+		free(temp);
 	}
 }

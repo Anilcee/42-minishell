@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   command_executor.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:31:17 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 16:13:36 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/01 20:07:50 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,9 +48,10 @@ int	handle_pipes(t_command *cmds, t_token *tokens, t_shell *shell)
 	return (0);
 }
 
-int	handle_redirections_block(t_redirection_context *ctx)
+int	handle_redirections_block(t_redirection_context *ctx, t_shell *shell)
 {
-	if (!setup_redirections(ctx->cmds, ctx->saved_stdout, ctx->saved_stdin))
+	if (!setup_redirections(ctx->cmds, ctx->saved_stdout,
+			ctx->saved_stdin, shell))
 	{
 		ctx->shell->last_exit_code = 1;
 		return (0);

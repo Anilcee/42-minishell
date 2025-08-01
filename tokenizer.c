@@ -6,7 +6,7 @@
 /*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:25 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 11:13:42 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 20:46:01 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,26 @@ void	add_token_to_list(t_token **head, t_token **tail, char *word,
 	else
 		(*tail)->next = new_token;
 	*tail = new_token;
+}
+
+int	check_unclosed_quotes(const char *input)
+{
+	int	i;
+	int	in_single_quote;
+	int	in_double_quote;
+
+	i = 0;
+	in_single_quote = 0;
+	in_double_quote = 0;
+	while (input[i])
+	{
+		if (input[i] == '\'' && !in_double_quote)
+			in_single_quote = !in_single_quote;
+		else if (input[i] == '\"' && !in_single_quote)
+			in_double_quote = !in_double_quote;
+		i++;
+	}
+	return (in_single_quote || in_double_quote);
 }
 
 t_token	*tokenize(char *input, t_shell *shell)

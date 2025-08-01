@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   free2.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 14:30:24 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 16:11:50 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/01 20:52:48 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,19 +65,6 @@ void	free_env_list(t_env *env_list)
 	}
 }
 
-void	wait_and_free_pids(t_pid_list *head)
-{
-	t_pid_list	*temp;
-
-	while (head)
-	{
-		waitpid(head->pid, NULL, 0);
-		temp = head;
-		head = head->next;
-		free(temp);
-	}
-}
-
 void	free_shell(t_shell *shell)
 {
 	if (!shell)
@@ -88,4 +75,10 @@ void	free_shell(t_shell *shell)
 		free_array(shell->envp);
 	shell->env_list = NULL;
 	shell->last_exit_code = 0;
+}
+
+void	free_tokens_and_commands(t_token *tokens, t_command *commands)
+{
+	free_tokens(tokens);
+	free_commands(commands);
 }

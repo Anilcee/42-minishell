@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   redirection.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:53 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 16:35:47 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/01 20:04:46 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ void	run_child_command(t_command *current_cmd, t_shell *shell,
 	char	*program_path;
 	int		ret;
 
-	if (handle_redirections(current_cmd) < 0)
+	if (handle_redirections(current_cmd, shell) < 0)
 		cleanup_and_exit(shell, all_cmds, all_tokens, 1);
 	if (!current_cmd->args || !current_cmd->args[0])
 		cleanup_and_exit(shell, all_cmds, all_tokens, 0);
