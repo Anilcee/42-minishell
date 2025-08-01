@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   external_utils_1.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:36 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 10:33:41 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 16:09:09 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,12 +84,12 @@ int	search_command_in_paths(char **paths, char *command_name,
 		*program_path = build_path(paths[i], command_name);
 		if (access(*program_path, X_OK) == 0)
 		{
-			free_paths_array(paths);
+			free_array(paths);
 			return (CMD_SUCCESS);
 		}
 		free(*program_path);
 		*program_path = NULL;
 	}
-	free_paths_array(paths);
+	free_array(paths);
 	return (CMD_NOT_FOUND);
 }

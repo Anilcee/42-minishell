@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:51 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 10:33:11 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 16:57:59 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,7 @@ t_command	*parse_tokens(t_token *tokens)
 	}
 	if (current_cmd && !current_cmd->args && !current_cmd->redirects)
 	{
-		write(2, "minishell: syntax error near unexpected token `|'\n", 49);
+		write(2, "minishell: syntax error near unexpected token `|'\n", 51);
 		free_commands(head);
 		return (NULL);
 	}

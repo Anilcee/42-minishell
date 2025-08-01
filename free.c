@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   free.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42istanbul.c    +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:39 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/07/27 14:30:19 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 16:09:37 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,19 +25,19 @@ void	cleanup_and_exit(t_shell *shell, t_command *all_cmds,
 	exit(exit_code);
 }
 
-void	free_paths_array(char **paths)
+void	free_array(char **arr)
 {
 	int	i;
 
-	if (!paths)
+	if (!arr)
 		return ;
 	i = 0;
-	while (paths[i])
+	while (arr[i])
 	{
-		free(paths[i]);
+		free(arr[i]);
 		i++;
 	}
-	free(paths);
+	free(arr);
 }
 
 void	free_tokens(t_token *head)
@@ -66,4 +66,18 @@ void	free_history_list(t_history *head)
 			free(temp->line);
 		free(temp);
 	}
+}
+
+void	cleanup_resources(t_pid_list *pid_list, t_shell shell)
+{
+	t_pid_list	*temp;
+
+	while (pid_list)
+	{
+		temp = pid_list;
+		pid_list = pid_list->next;
+		free(temp);
+	}
+	if (shell.env_list)
+		free_env_list(shell.env_list);
 }

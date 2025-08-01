@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   command_executor.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:31:17 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 12:16:16 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 16:13:36 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@ int	execute_external_cmd(t_command *cmds, t_shell *shell)
 	if (external_result < 0)
 	{
 		handle_external_error(cmds, external_result, shell);
-		handle_external_error2(cmds, external_result, shell);
 	}
 	else
 		shell->last_exit_code = external_result;

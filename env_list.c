@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   env_list.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42istanbul.c    +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 12:47:24 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/07/27 13:17:37 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 16:24:12 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,17 +93,20 @@ char	**env_list_to_array(t_env *env_list, int count)
 	return (arr);
 }
 
-void	free_string_array(char **arr)
+char	*get_path_env(t_shell *shell)
 {
 	int	i;
 
-	if (!arr)
-		return ;
-	i = 0;
-	while (arr[i])
+	if (shell->env_list)
+		return (get_env_value(shell->env_list, "PATH"));
+	else
 	{
-		free(arr[i]);
-		i++;
+		i = -1;
+		while (shell->envp && shell->envp[++i])
+		{
+			if (ft_strncmp(shell->envp[i], "PATH=", 5) == 0)
+				return (shell->envp[i] + 5);
+		}
 	}
-	free(arr);
+	return (NULL);
 }

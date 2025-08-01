@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   error_handler.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:28:06 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 11:31:12 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 16:15:40 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,12 +46,15 @@ void	handle_external_error(t_command *cmds, int result, t_shell *shell)
 	else if (result == FILE_NOT_FOUND || result == PATH_NOT_SET)
 		print_error_message(cmds->args[0], ": No such file or directory\n", 127,
 			shell);
-}
-
-void	handle_external_error2(t_command *cmds, int result, t_shell *shell)
-{
-	if (result == IS_DIRECTORY)
+	else if (result == IS_DIRECTORY)
 		print_error_message(cmds->args[0], ": Is a directory\n", 126, shell);
 	else if (result == PERMISSION_DENIED)
 		print_error_message(cmds->args[0], ": Permission denied\n", 126, shell);
+}
+
+void	print_error_and_exit(char *cmd, char *msg, int exit_code)
+{
+	write(STDERR_FILENO, cmd, ft_strlen(cmd));
+	write(STDERR_FILENO, msg, ft_strlen(msg));
+	exit(exit_code);
 }

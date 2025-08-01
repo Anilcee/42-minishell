@@ -33,6 +33,10 @@ SRCS        =   minishell.c						\
 				error_handler.c					\
 				command_executor.c				\
 				signal_handler.c				\
+				redirection_and_heredoc_utils.c	\
+				child_builtin_executer.c		\
+				pipe_utils.c 					\
+				resolver.c 						\
 				redirection_handler.c			\
 				expand.c				
 OBJS        = $(SRCS:.c=.o)

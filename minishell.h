@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:46 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 12:29:21 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 16:44:33 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -171,8 +171,8 @@ int						handle_redirect_token(t_token **tokens,
 							t_command *current_cmd, t_command **head);
 void					handle_word_token(t_command *current_cmd,
 							t_token *tokens);
-void					handle_pipe_token(t_command **current_cmd,
-							t_token **tokens);
+int						handle_pipe_token(t_command **current_cmd,
+							t_token **tokens, t_command **head);
 int						handle_token(t_token **tokens, t_command **current_cmd,
 							t_command **head);
 t_env					*add_env_list(t_env **head, char *input);
@@ -206,14 +206,13 @@ void					free_env_list(t_env *head);
 void					free_tokens(t_token *head);
 void					free_commands(t_command *head);
 void					free_redirects(t_redirect *head);
-void					free_envp_array(char **envp);
 void					free_shell(t_shell *shell);
 void					free_history_list(t_history *head);
 int						check_absolute_path(char *command_name);
 char					*find_in_path(char *command_name, t_shell *shell);
 int						execute_child_process(char *program_path,
 							t_command *cmd, char **envp);
-void					free_paths_array(char **paths);
+void					free_array(char **arr);
 int						get_exit_status(int status);
 void					bubble_sort(char **arr, int count);
 void					free_string_array(char **arr);
@@ -226,8 +225,6 @@ void					add_env_node_to_list(t_env **head, t_env **current,
 							t_env *new_node);
 void					print_exported_vars(t_env *env_list);
 void					print_export_error(char *input);
-void					handle_external_error2(t_command *cmds, int result,
-							t_shell *shell);
 void					print_error_message(char *cmd_name, char *error_msg,
 							int exit_code, t_shell *shell);
 int						ft_clean(char **srg, int i);
@@ -263,5 +260,23 @@ void					handle_external_error(t_command *cmds, int result,
 							t_shell *shell);
 int						setup_redirections(t_command *cmds, int *saved_stdout,
 							int *saved_stdin);
+void					wait_and_free_pids(t_pid_list *head);
+int						handle_process_creation(t_execution_context *ctx);
+int						handle_exit_builtin_child(t_command *cmd);
+char					*resolve_command_path(char *command_name,
+							t_shell *shell);
+int						handle_env_builtins(t_command *cmd, t_shell *shell);
+int						handle_basic_builtins(t_command *cmd, t_shell *shell);
+void					run_child_command(t_command *current_cmd,
+							t_shell *shell, t_command *all_cmds,
+							t_token *all_tokens);
+int						handle_heredoc(const char *delimiter);
+void					print_error_and_exit(char *cmd, char *msg,
+							int exit_code);
+char					*get_path_env(t_shell *shell);
+void					setup_child_pipes(int prev_fd, int *fd,
+							t_command *current);
+void					add_pid(t_pid_list **head, pid_t pid);
+int						setup_pipe_if_needed(t_command *current, int *fd);
 
 #endif

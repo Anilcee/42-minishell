@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   free2.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42istanbul.c    +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 14:30:24 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/07/27 14:30:29 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 16:11:50 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,19 +65,16 @@ void	free_env_list(t_env *env_list)
 	}
 }
 
-void	free_envp_array(char **envp)
+void	wait_and_free_pids(t_pid_list *head)
 {
-	int	i;
+	t_pid_list	*temp;
 
-	i = 0;
-	if (envp)
+	while (head)
 	{
-		while (envp[i])
-		{
-			free(envp[i]);
-			i++;
-		}
-		free(envp);
+		waitpid(head->pid, NULL, 0);
+		temp = head;
+		head = head->next;
+		free(temp);
 	}
 }
 
@@ -88,7 +85,7 @@ void	free_shell(t_shell *shell)
 	if (shell->env_list)
 		free_env_list(shell->env_list);
 	if (shell->envp)
-		free_envp_array(shell->envp);
+		free_array(shell->envp);
 	shell->env_list = NULL;
 	shell->last_exit_code = 0;
 }

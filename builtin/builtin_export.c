@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_export.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 10:37:12 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 10:43:10 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/01 16:23:48 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ void	print_exported_vars(t_env *env_list)
 		printf("declare -x %s\n", arr[i]);
 		i++;
 	}
-	free_string_array(arr);
+	free_array(arr);
 }
 
 int	handle_export_with_value(char *arg, char ***envp, t_env **env_list)
