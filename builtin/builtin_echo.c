@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_echo.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 02:02:28 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 10:42:58 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/05 17:21:21 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,9 +22,9 @@ int	should_print_newline(char **args, int *i)
 	{
 		if (args[*i][0] != '-')
 			break ;
-		j = 0;
-		while (args[*i][++j] == 'n')
-			;
+		j = -1;
+		while (args[*i][j] == 'n')
+			j++;
 		if (args[*i][j] != '\0')
 			break ;
 		newline = 0;

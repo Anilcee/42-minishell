@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   tokenizer.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:25 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 11:13:42 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/05 14:34:56 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,4 +65,24 @@ t_token	*tokenize(char *input, t_shell *shell)
 			add_token_to_list(&head, &tail, word, '\0');
 	}
 	return (head);
+}
+
+int	check_unclosed_quotes(const char *input)
+{
+	int	i;
+	int	in_single_quote;
+	int	in_double_quote;
+
+	i = 0;
+	in_single_quote = 0;
+	in_double_quote = 0;
+	while (input[i])
+	{
+		if (input[i] == '\'' && !in_double_quote)
+			in_single_quote = !in_single_quote;
+		else if (input[i] == '\"' && !in_single_quote)
+			in_double_quote = !in_double_quote;
+		i++;
+	}
+	return (in_single_quote || in_double_quote);
 }

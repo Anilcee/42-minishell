@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:46 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 16:44:33 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/05 18:01:49 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,11 +128,11 @@ typedef struct s_redirection_context
 
 typedef enum e_exit_result
 {
-	EXIT_OK = 0,
-	EXIT_TOO_MANY_ARGS = 1,
-	EXIT_NOT_NUMERIC = 2,
-	EXIT_NO_ARG = 3,
-	EXIT_ARG_VALUE = 4
+	EXIT_OK,
+	EXIT_TOO_MANY_ARGS,
+	EXIT_NOT_NUMERIC,
+	EXIT_NO_ARG,
+	EXIT_ARG_VALUE
 }						t_exit_result;
 
 extern int				g_signal_received;
@@ -158,7 +158,7 @@ int						builtin_export(t_command *cmd, char ***envp,
 							t_env **env_list);
 int						is_valid_identifier(const char *str);
 char					**copy_env(char **envp);
-int						handle_redirections(t_command *cmd);
+int						handle_redirections(t_command *cmd, t_shell *shell);
 int						has_pipe(t_command *cmds);
 int						execute_piped_commands(t_command *cmds, t_token *tokens,
 							t_shell *shell);
@@ -250,7 +250,8 @@ char					*process_word_no_expansion(char *input, int start,
 int						validate_command(t_command *cmds, t_shell *shell);
 int						handle_pipes(t_command *cmds, t_token *tokens,
 							t_shell *shell);
-int						handle_redirections_block(t_redirection_context *ctx);
+int						handle_redirections_block(t_redirection_context *ctx,
+							t_shell *shell);
 int						handle_builtin_or_external(t_command *cmds,
 							t_shell *shell, int saved_stdout, int saved_stdin);
 void					restore_redirections(int saved_stdout, int saved_stdin);
@@ -259,18 +260,15 @@ void					setup_signals(void);
 void					handle_external_error(t_command *cmds, int result,
 							t_shell *shell);
 int						setup_redirections(t_command *cmds, int *saved_stdout,
-							int *saved_stdin);
+							int *saved_stdin, t_shell *shell);
 void					wait_and_free_pids(t_pid_list *head);
 int						handle_process_creation(t_execution_context *ctx);
-int						handle_exit_builtin_child(t_command *cmd);
 char					*resolve_command_path(char *command_name,
 							t_shell *shell);
-int						handle_env_builtins(t_command *cmd, t_shell *shell);
-int						handle_basic_builtins(t_command *cmd, t_shell *shell);
 void					run_child_command(t_command *current_cmd,
 							t_shell *shell, t_command *all_cmds,
 							t_token *all_tokens);
-int						handle_heredoc(const char *delimiter);
+int						handle_heredoc(const char *delimiter, t_shell *shell);
 void					print_error_and_exit(char *cmd, char *msg,
 							int exit_code);
 char					*get_path_env(t_shell *shell);
@@ -278,5 +276,8 @@ void					setup_child_pipes(int prev_fd, int *fd,
 							t_command *current);
 void					add_pid(t_pid_list **head, pid_t pid);
 int						setup_pipe_if_needed(t_command *current, int *fd);
-
+void					setup_signals_heredoc(void);
+int						check_unclosed_quotes(const char *input);
+void					free_tokens_and_commands(t_token *tokens,
+							t_command *cmds);
 #endif

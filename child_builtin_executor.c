@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 15:36:13 by oislamog          #+#    #+#             */
-/*   Updated: 2025/08/01 15:44:01 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/05 17:36:59 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,29 +51,4 @@ int	is_builtin(const char *cmd)
 		|| ft_strcmp(cmd, "env") == 0 || ft_strcmp(cmd, "echo") == 0
 		|| ft_strcmp(cmd, "export") == 0 || ft_strcmp(cmd, "unset") == 0
 		|| ft_strcmp(cmd, "exit") == 0);
-}
-
-int	handle_basic_builtins(t_command *cmd, t_shell *shell)
-{
-	if (ft_strcmp(cmd->args[0], "cd") == 0)
-		return (builtin_cd(cmd, &shell->env_list));
-	else if (ft_strcmp(cmd->args[0], "pwd") == 0)
-		return (builtin_pwd());
-	else if (ft_strcmp(cmd->args[0], "env") == 0)
-		return (builtin_env(shell->envp));
-	else if (ft_strcmp(cmd->args[0], "echo") == 0)
-	{
-		builtin_echo(cmd);
-		return (0);
-	}
-	return (-1);
-}
-
-int	handle_env_builtins(t_command *cmd, t_shell *shell)
-{
-	if (ft_strcmp(cmd->args[0], "export") == 0)
-		return (builtin_export(cmd, &shell->envp, &shell->env_list));
-	else if (ft_strcmp(cmd->args[0], "unset") == 0)
-		return (builtin_unset(cmd, &shell->envp, &shell->env_list));
-	return (-1);
 }

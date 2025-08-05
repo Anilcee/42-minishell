@@ -8,7 +8,7 @@ SRCS        =   minishell.c						\
 				utils3.c						\
 				utils4.c						\
 				utils5.c						\
-				redirection.c					\
+				execution.c						\
 				tokenizer.c						\
 				lexer.c							\
 				lexer_utils.c					\
@@ -34,11 +34,12 @@ SRCS        =   minishell.c						\
 				command_executor.c				\
 				signal_handler.c				\
 				redirection_and_heredoc_utils.c	\
-				child_builtin_executer.c		\
+				child_builtin_executor.c		\
 				pipe_utils.c 					\
-				resolver.c 						\
+				path_finder.c 					\
 				redirection_handler.c			\
-				expand.c				
+				expand.c						\
+				heredoc.c
 OBJS        = $(SRCS:.c=.o)
 HEADER      = minishell.h
 

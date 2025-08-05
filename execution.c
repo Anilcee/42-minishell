@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:53 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 16:35:47 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/05 17:53:11 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ void	run_child_command(t_command *current_cmd, t_shell *shell,
 	char	*program_path;
 	int		ret;
 
-	if (handle_redirections(current_cmd) < 0)
+	if (handle_redirections(current_cmd, shell) < 0)
 		cleanup_and_exit(shell, all_cmds, all_tokens, 1);
 	if (!current_cmd->args || !current_cmd->args[0])
 		cleanup_and_exit(shell, all_cmds, all_tokens, 0);
@@ -40,25 +40,6 @@ void	run_child_command(t_command *current_cmd, t_shell *shell,
 	cleanup_and_exit(shell, all_cmds, all_tokens, 126);
 }
 
-void	execute_builtin_in_child(t_command *cmd, t_shell *shell,
-		t_command *all_cmds, t_token *all_tokens)
-{
-	int	exit_code;
-
-	exit_code = handle_basic_builtins(cmd, shell);
-	if (exit_code != -1)
-		cleanup_and_exit(shell, all_cmds, all_tokens, exit_code);
-	exit_code = handle_env_builtins(cmd, shell);
-	if (exit_code != -1)
-		cleanup_and_exit(shell, all_cmds, all_tokens, exit_code);
-	if (ft_strcmp(cmd->args[0], "exit") == 0)
-	{
-		exit_code = handle_exit_builtin_child(cmd);
-		cleanup_and_exit(shell, all_cmds, all_tokens, exit_code);
-	}
-	cleanup_and_exit(shell, all_cmds, all_tokens, 0);
-}
-
 static int	calculate_final_exit_code(int status)
 {
 	if (WIFEXITED(status))
@@ -71,6 +52,7 @@ static int	calculate_final_exit_code(int status)
 static int	wait_for_all_processes(t_pid_list *pid_list)
 {
 	t_pid_list	*temp;
+	t_pid_list	*next;
 	int			status;
 	int			final_exit_code;
 
@@ -83,7 +65,9 @@ static int	wait_for_all_processes(t_pid_list *pid_list)
 			write(STDERR_FILENO, "Broken pipe\n", 12);
 		if (temp->next == NULL)
 			final_exit_code = calculate_final_exit_code(status);
-		temp = temp->next;
+		next = temp->next;
+		free(temp);
+		temp = next;
 	}
 	return (final_exit_code);
 }
@@ -113,6 +97,5 @@ int	execute_piped_commands(t_command *cmds, t_token *tokens, t_shell *shell)
 		current = current->next;
 	}
 	final_exit_code = wait_for_all_processes(pid_list);
-	wait_and_free_pids(pid_list);
 	return (final_exit_code);
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:43 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 12:10:22 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/05 17:59:14 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ int	execute_command(t_command *cmds, t_token *tokens, t_shell *shell)
 	ctx.saved_stdout = &saved_stdout;
 	ctx.saved_stdin = &saved_stdin;
 	ctx.shell = shell;
-	if (!handle_redirections_block(&ctx))
+	if (!handle_redirections_block(&ctx, shell))
 		return (1);
 	if (!handle_builtin_or_external(cmds, shell, saved_stdout, saved_stdin))
 		return (0);
@@ -47,18 +47,26 @@ static int	handle_command_flow(char *input, t_shell *shell)
 	t_command	*cmds;
 	int			result;
 
-	tokens = tokenize(input, shell);
-	cmds = parse_tokens(tokens);
-	if (cmds)
-		result = execute_command(cmds, tokens, shell);
+	result = 1;
+	if (check_unclosed_quotes(input))
+	{
+		printf("minishell: syntax error: unclosed quote\n");
+		tokens = NULL;
+		shell->last_exit_code = 1;
+	}
 	else
 	{
-		result = 1;
-		if (g_signal_received == SIGINT)
-			shell->last_exit_code = 130;
+		tokens = tokenize(input, shell);
+		cmds = parse_tokens(tokens);
+		if (cmds)
+			result = execute_command(cmds, tokens, shell);
+		else
+		{
+			if (g_signal_received == SIGINT)
+				shell->last_exit_code = 130;
+		}
+		free_tokens_and_commands(tokens, cmds);
 	}
-	free_tokens(tokens);
-	free_commands(cmds);
 	return (result);
 }
 
