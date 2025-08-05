@@ -59,6 +59,7 @@ int	execute_child_process(char *program_path, t_command *cmd, char **envp)
 {
 	DIR	*dir;
 
+	setup_signals_child();
 	if (access(program_path, F_OK) != 0)
 		exit(127);
 	dir = opendir(program_path);

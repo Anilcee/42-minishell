@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 14:44:08 by oislamog          #+#    #+#             */
-/*   Updated: 2025/08/05 18:00:33 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/05 22:44:37 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ int	handle_heredoc(const char *delimiter, t_shell *shell)
 
 	if (pipe(pipefd) == -1)
 		return (-1);
+	setup_signals_heredoc();
 	line = NULL;
 	while (1)
 	{

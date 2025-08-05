@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   external_utils_2.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:34:44 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 10:34:45 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/05 20:25:09 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,11 +71,20 @@ int	external_commands(t_command *cmd, t_shell *shell)
 		result = handle_relative_path(command_name, &program_path, shell);
 	if (result != 0)
 		return (result);
+	setup_signals_parent();
 	pid = fork();
 	if (pid == 0)
 		execute_child_process(program_path, cmd, shell->envp);
 	else
 		waitpid(pid, &status, 0);
+	if (WIFSIGNALED(status))
+	{
+		if (WTERMSIG(status) == SIGINT)
+			write(STDOUT_FILENO, "\n", 1);
+		else if (WTERMSIG(status) == SIGQUIT)
+			write(STDERR_FILENO, "Quit (core dumped)\n", 20);
+	}
+	setup_signals();
 	free(program_path);
 	return (get_exit_status(status));
 }

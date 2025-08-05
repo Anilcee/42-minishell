@@ -32,7 +32,8 @@ SRCS        =   minishell.c						\
 				char_utils.c					\
 				error_handler.c					\
 				command_executor.c				\
-				signal_handler.c				\
+				signal.c						\
+				signal_helper.c					\
 				redirection_and_heredoc_utils.c	\
 				child_builtin_executor.c		\
 				pipe_utils.c 					\

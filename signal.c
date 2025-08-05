@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   signal_handler.c                                   :+:      :+:    :+:   */
+/*   signal.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:31:17 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 19:18:25 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/05 22:31:40 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,23 +22,6 @@ void	sigint_handler(int sig)
 	rl_on_new_line();
 	rl_replace_line("", 0);
 	rl_redisplay();
-}
-
-void	sigint_handler_heredoc(int sig)
-{
-	(void)sig;
-	g_signal_received = SIGINT;
-	write(1, "\n", 1);
-	rl_on_new_line();
-	rl_replace_line("", 0);
-	rl_redisplay();
-	close(0);
-}
-
-void	setup_signals_heredoc(void)
-{
-	signal(SIGINT, sigint_handler_heredoc);
-	signal(SIGQUIT, SIG_IGN);
 }
 
 void	setup_signals(void)

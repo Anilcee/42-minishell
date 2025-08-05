@@ -257,6 +257,8 @@ int						handle_builtin_or_external(t_command *cmds,
 void					restore_redirections(int saved_stdout, int saved_stdin);
 void					handle_signal_interrupt(t_shell *shell);
 void					setup_signals(void);
+void					setup_signals_child(void);
+void					setup_signals_parent(void);
 void					handle_external_error(t_command *cmds, int result,
 							t_shell *shell);
 int						setup_redirections(t_command *cmds, int *saved_stdout,

@@ -38,6 +38,7 @@ void	restore_redirections(int saved_stdout, int saved_stdin)
 
 void	handle_child_process_inline(t_execution_context *ctx)
 {
+	setup_signals_child();
 	setup_child_pipes(ctx->pipe_data.prev_fd, ctx->pipe_data.fd, ctx->current);
 	run_child_command(ctx->current, ctx->shell, ctx->all_cmds, ctx->all_tokens);
 }
