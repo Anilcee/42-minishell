@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:53 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/06 18:54:10 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/06 21:28:54 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,8 +61,7 @@ static int	wait_for_all_processes(t_pid_list *pid_list)
 	return (final_exit_code);
 }
 
-static int	execute_command_loop(t_execution_context *ctx,
-			t_pid_list **pid_list)
+static int	execute_command_loop(t_execution_context *ctx)
 {
 	t_command	*current;
 
@@ -72,8 +71,6 @@ static int	execute_command_loop(t_execution_context *ctx,
 		ctx->current = current;
 		if (handle_process_creation(ctx) < 0)
 		{
-			wait_and_free_pids(*pid_list);
-			setup_signals();
 			return (1);
 		}
 		current = current->next;
@@ -94,8 +91,12 @@ int	execute_piped_commands(t_command *cmds, t_token *tokens, t_shell *shell)
 	ctx.all_tokens = tokens;
 	ctx.pid_list = &pid_list;
 	setup_signals_parent();
-	if (execute_command_loop(&ctx, &pid_list) != 0)
+	if (execute_command_loop(&ctx) != 0)
+	{
+		wait_and_free_pids(pid_list);
+		setup_signals();
 		return (1);
+	}
 	final_exit_code = wait_for_all_processes(pid_list);
 	return (final_exit_code);
 }

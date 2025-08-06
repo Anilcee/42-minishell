@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:31:17 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/05 18:01:08 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/06 21:42:48 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,8 @@ void	restore_redirections(int saved_stdout, int saved_stdin)
 
 void	handle_child_process_inline(t_execution_context *ctx)
 {
+	wait_and_free_pids(*ctx->pid_list);
+	*ctx->pid_list = NULL;
 	setup_signals_child();
 	setup_child_pipes(ctx->pipe_data.prev_fd, ctx->pipe_data.fd, ctx->current);
 	run_child_command(ctx->current, ctx->shell, ctx->all_cmds, ctx->all_tokens);

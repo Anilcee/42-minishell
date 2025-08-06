@@ -22,7 +22,7 @@ int	should_print_newline(char **args, int *i)
 	{
 		if (args[*i][0] != '-')
 			break ;
-		j = -1;
+		j = 1;  // Start from index 1, after the '-'
 		while (args[*i][j] == 'n')
 			j++;
 		if (args[*i][j] != '\0')
