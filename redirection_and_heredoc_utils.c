@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 15:49:39 by oislamog          #+#    #+#             */
-/*   Updated: 2025/08/06 17:11:36 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/06 19:37:14 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,13 +23,16 @@ int	handle_input_redirect(t_redirect *redir, int *in_fd, int out_fd,
 		*in_fd = open(redir->filename, O_RDONLY);
 	if (*in_fd < 0)
 	{
-		if (redir->type != REDIR_HEREDOC || !g_signal_received)
+		if (redir->type == REDIR_HEREDOC && g_signal_received)
+		{
+			shell->last_exit_code = 130;
+		}
+		else
 		{
 			write(STDERR_FILENO, "minishell: ", 11);
 			perror(redir->filename);
 			shell->last_exit_code = 1;
 		}
-		shell->last_exit_code = 130;
 		if (out_fd != -1)
 			close(out_fd);
 		return (-1);

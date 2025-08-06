@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:46 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/06 17:34:46 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/06 20:32:16 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -162,19 +162,20 @@ int						handle_redirections(t_command *cmd, t_shell *shell);
 int						has_pipe(t_command *cmds);
 int						execute_piped_commands(t_command *cmds, t_token *tokens,
 							t_shell *shell);
-t_command				*parse_tokens(t_token *tokens);
+t_command				*parse_tokens(t_token *tokens, t_shell *shell);
 t_command				*create_new_command(void);
 void					add_arg(t_command *cmd, char *arg);
 void					add_redirect(t_command *cmd, t_redirect_type type,
 							char *filename);
 int						handle_redirect_token(t_token **tokens,
-							t_command *current_cmd, t_command **head);
+							t_command *current_cmd, t_command **head,
+							t_shell *shell);
 void					handle_word_token(t_command *current_cmd,
 							t_token *tokens);
 int						handle_pipe_token(t_command **current_cmd,
-							t_token **tokens, t_command **head);
+							t_token **tokens, t_command **head, t_shell *shell);
 int						handle_token(t_token **tokens, t_command **current_cmd,
-							t_command **head);
+							t_command **head, t_shell *shell);
 t_env					*add_env_list(t_env **head, char *input);
 char					**add_envp(char **envp, char *input);
 t_env					*envp_to_list(char **envp);
@@ -195,8 +196,6 @@ char					*ft_strchr(const char *s, int i);
 int						execute_command(t_command *cmds, t_token *tokens,
 							t_shell *shell);
 int						builtin_exit(t_command *cmd, int *real_exit_code);
-void					execute_builtin_in_child(t_command *cmd, t_shell *shell,
-							t_command *all_cmds, t_token *all_tokens);
 int						is_builtin(const char *cmd);
 void					cleanup_and_exit(t_shell *shell, t_command *all_cmds,
 							t_token *all_tokens, int exit_code);

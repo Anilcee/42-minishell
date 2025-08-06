@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:51 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 16:57:59 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/06 20:35:35 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,30 @@ void	add_redirect(t_command *cmd, t_redirect_type type, char *filename)
 	}
 }
 
-t_command	*parse_tokens(t_token *tokens)
+int	handle_token(t_token **tokens, t_command **current_cmd,
+		t_command **head, t_shell *shell)
+{
+	if ((*tokens)->t_type == T_PIPE)
+		return (handle_pipe_token(current_cmd, tokens, head, shell));
+	if (!*current_cmd)
+	{
+		*current_cmd = create_new_command();
+		if (!*head)
+			*head = *current_cmd;
+	}
+	if ((*tokens)->t_type == T_WORD)
+		handle_word_token(*current_cmd, *tokens);
+	else if ((*tokens)->t_type >= T_REDIRECT_IN
+		&& (*tokens)->t_type <= T_HEREDOC)
+	{
+		if (!handle_redirect_token(tokens, *current_cmd, head, shell))
+			return (0);
+	}
+	*tokens = (*tokens)->next;
+	return (1);
+}
+
+t_command	*parse_tokens(t_token *tokens, t_shell *shell)
 {
 	t_command	*head;
 	t_command	*current_cmd;
@@ -79,7 +102,7 @@ t_command	*parse_tokens(t_token *tokens)
 	current_cmd = NULL;
 	while (tokens)
 	{
-		if (!handle_token(&tokens, &current_cmd, &head))
+		if (!handle_token(&tokens, &current_cmd, &head, shell))
 			return (NULL);
 	}
 	if (current_cmd && !current_cmd->args && !current_cmd->redirects)

@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:43 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/05 17:59:14 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/06 20:22:03 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ static int	handle_command_flow(char *input, t_shell *shell)
 	else
 	{
 		tokens = tokenize(input, shell);
-		cmds = parse_tokens(tokens);
+		cmds = parse_tokens(tokens, shell);
 		if (cmds)
 			result = execute_command(cmds, tokens, shell);
 		else
