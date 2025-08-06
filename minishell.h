@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:46 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/05 18:01:49 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/06 17:34:46 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,7 +135,7 @@ typedef enum e_exit_result
 	EXIT_ARG_VALUE
 }						t_exit_result;
 
-extern int				g_signal_received;
+extern volatile sig_atomic_t	g_signal_received;
 
 char					**ft_split(const char *str, char separator);
 char					*ft_strjoin(char const *s1, char const *s2);
@@ -214,7 +214,6 @@ int						execute_child_process(char *program_path,
 void					free_array(char **arr);
 int						get_exit_status(int status);
 void					bubble_sort(char **arr, int count);
-void					free_string_array(char **arr);
 t_env					*create_new_env_node(char *key, char *value);
 void					append_env_node(t_env **head, t_env *new_node);
 t_env					*update_existing_env_node(t_env *current, char *key,
@@ -280,4 +279,5 @@ void					setup_signals_heredoc(void);
 int						check_unclosed_quotes(const char *input);
 void					free_tokens_and_commands(t_token *tokens,
 							t_command *cmds);
+int						process_exit_status(int status);				
 #endif

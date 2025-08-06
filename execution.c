@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:53 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/05 22:39:39 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/06 18:54:10 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,40 +46,47 @@ static int	wait_for_all_processes(t_pid_list *pid_list)
 	t_pid_list	*next;
 	int			status;
 	int			final_exit_code;
-	int			last_status;
 
 	final_exit_code = 0;
-	last_status = 0;
 	temp = pid_list;
 	while (temp)
 	{
 		waitpid(temp->pid, &status, 0);
-		if (WIFSIGNALED(status) && WTERMSIG(status) == SIGPIPE)
-			write(STDERR_FILENO, "Broken pipe\n", 12);
 		if (temp->next == NULL)
-		{
-			last_status = status;
-			final_exit_code = get_exit_status(status);
-		}
+			final_exit_code = process_exit_status(status);
 		next = temp->next;
 		free(temp);
 		temp = next;
 	}
-	if (WIFSIGNALED(last_status) && WTERMSIG(last_status) == SIGINT)
-		write(STDOUT_FILENO, "\n", 1);
-	else if (WIFSIGNALED(last_status) && WTERMSIG(last_status) == SIGQUIT)
-		write(STDERR_FILENO, "Quit (core dumped)\n", 20);
 	return (final_exit_code);
+}
+
+static int	execute_command_loop(t_execution_context *ctx,
+			t_pid_list **pid_list)
+{
+	t_command	*current;
+
+	current = ctx->all_cmds;
+	while (current)
+	{
+		ctx->current = current;
+		if (handle_process_creation(ctx) < 0)
+		{
+			wait_and_free_pids(*pid_list);
+			setup_signals();
+			return (1);
+		}
+		current = current->next;
+	}
+	return (0);
 }
 
 int	execute_piped_commands(t_command *cmds, t_token *tokens, t_shell *shell)
 {
-	t_command			*current;
 	t_pid_list			*pid_list;
 	t_execution_context	ctx;
 	int					final_exit_code;
 
-	current = cmds;
 	pid_list = NULL;
 	ctx.pipe_data.prev_fd = -1;
 	ctx.shell = shell;
@@ -87,18 +94,8 @@ int	execute_piped_commands(t_command *cmds, t_token *tokens, t_shell *shell)
 	ctx.all_tokens = tokens;
 	ctx.pid_list = &pid_list;
 	setup_signals_parent();
-	while (current)
-	{
-		ctx.current = current;
-		if (handle_process_creation(&ctx) < 0)
-		{
-			wait_and_free_pids(pid_list);
-			setup_signals();
-			return (1);
-		}
-		current = current->next;
-	}
+	if (execute_command_loop(&ctx, &pid_list) != 0)
+		return (1);
 	final_exit_code = wait_for_all_processes(pid_list);
-	//setup_signals();
 	return (final_exit_code);
 }

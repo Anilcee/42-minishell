@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 15:58:03 by oislamog          #+#    #+#             */
-/*   Updated: 2025/08/05 22:23:24 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/06 17:58:41 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,6 @@ char	*resolve_path_command(char *command_name, t_shell *shell)
 	path_env = get_path_env(shell);
 	if (!path_env)
 	{
-		//write(STDERR_FILENO, "minishell: ", 12);
 		print_error_and_exit(command_name, ": No such file or directory\n",
 			127);
 	}

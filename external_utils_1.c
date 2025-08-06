@@ -6,20 +6,30 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:36 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 16:09:09 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/06 17:55:20 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	get_exit_status(int status)
+int	process_exit_status(int status)
 {
-	if (WIFEXITED(status))
+	int	sig;
+
+	if (WIFSIGNALED(status))
+	{
+		sig = WTERMSIG(status);
+		if (sig == SIGINT)
+			write(STDOUT_FILENO, "\n", 1);
+		else if (sig == SIGQUIT)
+			write(STDERR_FILENO, "Quit (core dumped)\n", 20);
+		else if (sig == SIGPIPE)
+			write(STDERR_FILENO, "Broken pipe\n", 12);
+		return (128 + sig);
+	}
+	else if (WIFEXITED(status))
 		return (WEXITSTATUS(status));
-	else if (WIFSIGNALED(status))
-		return (128 + WTERMSIG(status));
-	else
-		return (1);
+	return (1);
 }
 
 int	execute_child_process(char *program_path, t_command *cmd, char **envp)

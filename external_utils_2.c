@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:34:44 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/05 20:25:09 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/06 17:56:07 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,14 +85,7 @@ int	external_commands(t_command *cmd, t_shell *shell)
 		execute_child_process(program_path, cmd, shell->envp);
 	else
 		waitpid(pid, &status, 0);
-	if (WIFSIGNALED(status))
-	{
-		if (WTERMSIG(status) == SIGINT)
-			write(STDOUT_FILENO, "\n", 1);
-		else if (WTERMSIG(status) == SIGQUIT)
-			write(STDERR_FILENO, "Quit (core dumped)\n", 20);
-	}
 	setup_signals();
 	free(program_path);
-	return (get_exit_status(status));
+	return (process_exit_status(status));
 }

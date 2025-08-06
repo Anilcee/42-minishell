@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:28:06 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/05 22:26:06 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/06 19:00:31 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,9 +50,15 @@ void	handle_external_error(t_command *cmds, int result, t_shell *shell)
 			shell);
 	}
 	else if (result == IS_DIRECTORY)
+	{
+		write(STDERR_FILENO, "minishell: ", 12);
 		print_error_message(cmds->args[0], ": Is a directory\n", 126, shell);
+	}
 	else if (result == PERMISSION_DENIED)
+	{
+		write(STDERR_FILENO, "minishell: ", 12);
 		print_error_message(cmds->args[0], ": Permission denied\n", 126, shell);
+	}	
 }
 
 void	print_error_and_exit(char *cmd, char *msg, int exit_code)

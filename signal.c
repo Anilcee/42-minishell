@@ -6,13 +6,13 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:31:17 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/05 22:31:40 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/06 17:23:25 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int		g_signal_received = 0;
+volatile sig_atomic_t	g_signal_received = 0;
 
 void	sigint_handler(int sig)
 {
