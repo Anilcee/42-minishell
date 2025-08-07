@@ -6,13 +6,13 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 15:49:39 by oislamog          #+#    #+#             */
-/*   Updated: 2025/08/06 19:37:14 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 18:24:16 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	handle_input_redirect(t_redirect *redir, int *in_fd, int out_fd,
+static int	handle_input_redirect(t_redirect *redir, int *in_fd, int out_fd,
 							t_shell *shell)
 {
 	if (*in_fd != -1)
@@ -40,7 +40,7 @@ int	handle_input_redirect(t_redirect *redir, int *in_fd, int out_fd,
 	return (0);
 }
 
-int	handle_output_redirect(t_redirect *redir, int *out_fd, int in_fd)
+static int	handle_output_redirect(t_redirect *redir, int *out_fd, int in_fd)
 {
 	int	flags;
 
@@ -62,7 +62,7 @@ int	handle_output_redirect(t_redirect *redir, int *out_fd, int in_fd)
 	return (0);
 }
 
-void	apply_redirections(int in_fd, int out_fd)
+static void	apply_redirections(int in_fd, int out_fd)
 {
 	if (in_fd != -1)
 	{

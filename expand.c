@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   expand.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42istanbul.c    +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 14:32:52 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/07/27 14:40:01 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/07 18:06:46 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ static char	*expand_env_variable(char *input, int *index, t_env *env_list)
 	return (result);
 }
 
-char	*expand_variable(char *input, int *index, t_env *env_list,
+static char	*expand_variable(char *input, int *index, t_env *env_list,
 		t_shell *shell)
 {
 	(*index)++;

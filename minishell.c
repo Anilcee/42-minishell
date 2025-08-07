@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:43 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/07 15:38:06 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 18:20:05 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ int	execute_command(t_command *cmds, t_token *tokens, t_shell *shell)
 	return (1);
 }
 
-void	init_shell(t_shell *shell, char **envp)
+static void	init_shell(t_shell *shell, char **envp)
 {
 	shell->last_exit_code = 0;
 	shell->envp = copy_env(envp);
@@ -70,7 +70,7 @@ static int	handle_command_flow(char *input, t_shell *shell)
 	return (result);
 }
 
-int	process_input(char *input, t_shell *shell)
+static int	process_input(char *input, t_shell *shell)
 {
 	int	result;
 

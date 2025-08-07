@@ -6,28 +6,11 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 14:44:08 by oislamog          #+#    #+#             */
-/*   Updated: 2025/08/06 17:23:05 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 20:54:22 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
-
-char	*handle_heredoc_text(char *input, int *i, t_shell *shell)
-{
-	char	quote;
-	int		start;
-	char	*part;
-
-	quote = input[*i];
-	(*i)++;
-	start = *i;
-	while (input[*i] && input[*i] != quote)
-		(*i)++;
-	part = process_word_with_expansion(input, start, *i, shell);
-	if (input[*i] == quote)
-		(*i)++;
-	return (part);
-}
 
 int	process_heredoc_loop(int pipefd[2], const char *delimiter, t_shell *shell)
 {
@@ -58,7 +41,7 @@ int	process_heredoc_loop(int pipefd[2], const char *delimiter, t_shell *shell)
 	return (0);
 }
 
-int	init_heredoc_pipe(int pipefd[2])
+static int	init_heredoc_pipe(int pipefd[2])
 {
 	if (pipe(pipefd) == -1)
 		return (-1);
@@ -75,7 +58,7 @@ int	handle_heredoc(const char *delimiter, t_shell *shell)
 		return (-1);
 	if (process_heredoc_loop(pipefd, delimiter, shell) < 0)
 		return (-1);
-	setup_signals();
+	setup_signals_heredoc();
 	close(pipefd[1]);
 	return (pipefd[0]);
 }

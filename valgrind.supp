@@ -46,3 +46,10 @@
    fun:initialize_shell_variables
    ...
 }
+{
+   ls_leaks
+   Memcheck:Leak
+   fun:malloc
+   fun:*
+   obj:/usr/bin/ls
+}

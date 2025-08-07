@@ -3,51 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_unset.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 11:42:03 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 10:43:25 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/07 18:31:36 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
-
-int	builtin_unset(t_command *cmd, char ***envp, t_env **env_list)
-{
-	char	*key;
-
-	key = cmd->args[1];
-	if (!key)
-		return (0);
-	unset_from_env_list(env_list, key);
-	*envp = unset_from_envp(*envp, key);
-	return (0);
-}
-
-void	unset_from_env_list(t_env **head, const char *key)
-{
-	t_env	*current;
-	t_env	*prev;
-
-	current = *head;
-	prev = NULL;
-	while (current)
-	{
-		if (ft_strcmp(current->key, key) == 0)
-		{
-			if (prev)
-				prev->next = current->next;
-			else
-				*head = current->next;
-			free(current->key);
-			free(current->value);
-			free(current);
-			return ;
-		}
-		prev = current;
-		current = current->next;
-	}
-}
 
 static void	copy_non_matching_env(char **envp, char **new_envp, const char *key,
 		int key_len)
@@ -74,7 +37,7 @@ static void	copy_non_matching_env(char **envp, char **new_envp, const char *key,
 	new_envp[j] = NULL;
 }
 
-char	**unset_from_envp(char **envp, const char *key)
+static char	**unset_from_envp(char **envp, const char *key)
 {
 	int		count;
 	int		key_len;
@@ -88,4 +51,41 @@ char	**unset_from_envp(char **envp, const char *key)
 	copy_non_matching_env(envp, new_envp, key, key_len);
 	free(envp);
 	return (new_envp);
+}
+
+static void	unset_from_env_list(t_env **head, const char *key)
+{
+	t_env	*current;
+	t_env	*prev;
+
+	current = *head;
+	prev = NULL;
+	while (current)
+	{
+		if (ft_strcmp(current->key, key) == 0)
+		{
+			if (prev)
+				prev->next = current->next;
+			else
+				*head = current->next;
+			free(current->key);
+			free(current->value);
+			free(current);
+			return ;
+		}
+		prev = current;
+		current = current->next;
+	}
+}
+
+int	builtin_unset(t_command *cmd, char ***envp, t_env **env_list)
+{
+	char	*key;
+
+	key = cmd->args[1];
+	if (!key)
+		return (0);
+	unset_from_env_list(env_list, key);
+	*envp = unset_from_envp(*envp, key);
+	return (0);
 }

@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:28:06 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/07 15:12:30 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 18:05:21 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,12 +58,5 @@ void	handle_external_error(t_command *cmds, int result, t_shell *shell)
 	{
 		write(STDERR_FILENO, "minishell: ", 12);
 		print_error_message(cmds->args[0], ": Permission denied\n", 126, shell);
-	}	
-}
-
-void	print_error_and_exit(char *cmd, char *msg, int exit_code)
-{
-	write(STDERR_FILENO, cmd, ft_strlen(cmd));
-	write(STDERR_FILENO, msg, ft_strlen(msg));
-	exit(exit_code);
+	}
 }

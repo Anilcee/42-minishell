@@ -6,13 +6,13 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:31:17 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/07 15:37:18 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 18:02:45 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	execute_external_cmd(t_command *cmds, t_shell *shell)
+static int	execute_external_cmd(t_command *cmds, t_shell *shell)
 {
 	int	external_result;
 

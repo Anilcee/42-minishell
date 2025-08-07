@@ -6,21 +6,20 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:39 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 16:09:37 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 18:09:26 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	cleanup_and_exit(t_shell *shell, t_command *all_cmds,
-		t_token *all_tokens, int exit_code)
+void	cleanup_and_exit(t_exec_context *ctx, int exit_code)
 {
-	if (shell)
-		free_shell(shell);
-	if (all_cmds)
-		free_commands(all_cmds);
-	if (all_tokens)
-		free_tokens(all_tokens);
+	if (ctx->shell)
+		free_shell(ctx->shell);
+	if (ctx->all_cmds)
+		free_commands(ctx->all_cmds);
+	if (ctx->all_tokens)
+		free_tokens(ctx->all_tokens);
 	rl_clear_history();
 	exit(exit_code);
 }
@@ -66,18 +65,4 @@ void	free_history_list(t_history *head)
 			free(temp->line);
 		free(temp);
 	}
-}
-
-void	cleanup_resources(t_pid_list *pid_list, t_shell shell)
-{
-	t_pid_list	*temp;
-
-	while (pid_list)
-	{
-		temp = pid_list;
-		pid_list = pid_list->next;
-		free(temp);
-	}
-	if (shell.env_list)
-		free_env_list(shell.env_list);
 }

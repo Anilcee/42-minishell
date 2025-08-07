@@ -6,38 +6,38 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:53 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/07 15:37:41 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 17:49:13 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	run_child_command(t_command *current_cmd, t_shell *shell,
-		t_command *all_cmds, t_token *all_tokens)
+static void	execute_external_command(t_exec_context *ctx, char *program_path)
+{
+	execve(program_path, ctx->current->args, ctx->shell->envp);
+	free(program_path);
+	perror("minishell: execve");
+	cleanup_and_exit(ctx, 126);
+}
+
+void	run_child_command(t_exec_context *ctx)
 {
 	char	*program_path;
 	int		ret;
 
-	if (handle_redirections(current_cmd, shell) < 0)
-		cleanup_and_exit(shell, all_cmds, all_tokens, 1);
-	if (!current_cmd->args || !current_cmd->args[0])
-		cleanup_and_exit(shell, all_cmds, all_tokens, 0);
-	if (is_builtin(current_cmd->args[0]))
+	if (handle_redirections(ctx->current, ctx->shell) < 0)
+		cleanup_and_exit(ctx, 1);
+	if (!ctx->current->args || !ctx->current->args[0])
+		cleanup_and_exit(ctx, 0);
+	if (is_builtin(ctx->current->args[0]))
 	{
-		ret = execute_builtin(current_cmd, shell);
-		cleanup_and_exit(shell, all_cmds, all_tokens, ret);
+		ret = execute_builtin(ctx->current, ctx->shell);
+		cleanup_and_exit(ctx, ret);
 	}
-	program_path = resolve_command_path(current_cmd->args[0], shell);
+	program_path = resolve_command_path(ctx->current->args[0], ctx->shell);
 	if (!program_path)
-	{
-		print_error_message(current_cmd->args[0], ": command not found\n", 127,
-			NULL);
-		cleanup_and_exit(shell, all_cmds, all_tokens, 127);
-	}
-	execve(program_path, current_cmd->args, shell->envp);
-	free(program_path);
-	perror("minishell: execve");
-	cleanup_and_exit(shell, all_cmds, all_tokens, 126);
+		handle_command_not_found(ctx);
+	execute_external_command(ctx, program_path);
 }
 
 static int	wait_for_all_processes(t_pid_list *pid_list)

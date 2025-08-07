@@ -6,37 +6,27 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 15:58:03 by oislamog          #+#    #+#             */
-/*   Updated: 2025/08/07 15:20:40 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 18:22:47 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-char	*validate_absolute_path(char *command_name)
+static char	*validate_absolute_path(char *command_name)
 {
 	int	status;
 
 	status = check_absolute_path_status(command_name);
 	if (status == FILE_NOT_FOUND)
-	{
-		write(STDERR_FILENO, "minishell: ", 12);
-		print_error_and_exit(command_name, ": No such file or directory\n",
-			127);
-	}
+		return (NULL);
 	else if (status == IS_DIRECTORY)
-	{
-		write(STDERR_FILENO, "minishell: ", 12);
-		print_error_and_exit(command_name, ": Is a directory\n", 126);
-	}
+		return (NULL);
 	else if (status == PERMISSION_DENIED)
-	{
-		write(STDERR_FILENO, "minishell: ", 12);
-		print_error_and_exit(command_name, ": Permission denied\n", 126);
-	}	
+		return (NULL);
 	return (ft_strdup(command_name));
 }
 
-char	*search_in_paths(char *command_name, char **paths)
+static char	*search_in_paths(char *command_name, char **paths)
 {
 	char	*program_path;
 	int		i;
@@ -65,21 +55,17 @@ char	*resolve_path(char *command_name, char *path_env)
 	return (program_path);
 }
 
-char	*resolve_path_command(char *command_name, t_shell *shell)
+static char	*resolve_path_command(char *command_name, t_shell *shell)
 {
 	char	*path_env;
 	char	*program_path;
 
 	path_env = get_path_env(shell);
 	if (!path_env)
-	{
-		write(STDERR_FILENO, "minishell: ", 12);
-		print_error_and_exit(command_name, ": No such file or directory\n",
-			127);
-	}
+		return (NULL);
 	program_path = resolve_path(command_name, path_env);
 	if (!program_path)
-		print_error_and_exit(command_name, ": command not found\n", 127);
+		return (NULL);
 	return (program_path);
 }
 

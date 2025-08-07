@@ -27,10 +27,10 @@ SRCS        =   minishell.c						\
 				builtin/builtin_executor.c		\
 				env_list.c						\
 				env_node.c						\
-				external_utils_1.c				\
-				external_utils_2.c				\
+				external_utils.c				\
 				char_utils.c					\
 				error_handler.c					\
+				error_handler2.c				\
 				command_executor.c				\
 				signal.c						\
 				signal_helper.c					\

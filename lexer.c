@@ -28,7 +28,7 @@ t_token_type	get_token_type(char *value)
 		return (T_WORD);
 }
 
-char	*extract_word(char *input, int start, int end)
+static char	*extract_word(char *input, int start, int end)
 {
 	int		len;
 	char	*word;

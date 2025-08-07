@@ -6,13 +6,13 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 10:37:12 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/05 17:25:51 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 18:32:43 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 
-void	print_exported_vars(t_env *env_list)
+static void	print_exported_vars(t_env *env_list)
 {
 	int		count;
 	t_env	*tmp;
@@ -41,14 +41,15 @@ void	print_exported_vars(t_env *env_list)
 	free_array(arr);
 }
 
-int	handle_export_with_value(char *arg, char ***envp, t_env **env_list)
+static int	handle_export_with_value(char *arg, char ***envp, t_env **env_list)
 {
 	add_env_list(env_list, arg);
 	*envp = add_envp(*envp, arg);
 	return (0);
 }
 
-int	handle_export_without_value(char *arg, char ***envp, t_env **env_list)
+static int	handle_export_without_value(char *arg, char ***envp,
+			t_env **env_list)
 {
 	char	*existing_value;
 	char	*new_var;
@@ -65,7 +66,7 @@ int	handle_export_without_value(char *arg, char ***envp, t_env **env_list)
 	return (0);
 }
 
-int	export_single_var(char *arg, char ***envp, t_env **env_list)
+static int	export_single_var(char *arg, char ***envp, t_env **env_list)
 {
 	if (!is_valid_identifier(arg))
 	{

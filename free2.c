@@ -6,13 +6,13 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 14:30:24 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/05 14:44:38 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 18:10:28 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	free_redirects(t_redirect *head)
+static void	free_redirects(t_redirect *head)
 {
 	t_redirect	*temp;
 
@@ -51,7 +51,7 @@ void	free_commands(t_command *head)
 	}
 }
 
-void	free_env_list(t_env *env_list)
+static void	free_env_list(t_env *env_list)
 {
 	t_env	*temp;
 

@@ -6,13 +6,13 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:25 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/07 15:40:05 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 18:26:09 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-t_token	*create_token(char *word)
+static t_token	*create_token(char *word)
 {
 	t_token	*token;
 

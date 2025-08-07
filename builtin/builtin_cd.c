@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_cd.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:48:37 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 10:42:50 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/07 17:56:09 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 
-int	count_args(char **args)
+static int	count_args(char **args)
 {
 	int	i;
 
@@ -22,7 +22,7 @@ int	count_args(char **args)
 	return (i);
 }
 
-int	check_too_many_args(int argc)
+static int	check_too_many_args(int argc)
 {
 	if (argc > 2)
 	{
@@ -32,7 +32,7 @@ int	check_too_many_args(int argc)
 	return (0);
 }
 
-char	*resolve_target_path(char *arg, int argc, t_env *env_list)
+static char	*resolve_target_path(char *arg, int argc, t_env *env_list)
 {
 	char	*path;
 
@@ -60,7 +60,7 @@ char	*resolve_target_path(char *arg, int argc, t_env *env_list)
 	return (path);
 }
 
-int	try_change_directory(char *path)
+static int	try_change_directory(char *path)
 {
 	if (chdir(path) != 0)
 	{

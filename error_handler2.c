@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   external_utils_1.c                                 :+:      :+:    :+:   */
+/*   error_handler2.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:36 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/06 17:55:20 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 17:49:33 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,18 +32,34 @@ int	process_exit_status(int status)
 	return (1);
 }
 
-int	execute_child_process(char *program_path, t_command *cmd, char **envp)
+static void	handle_absolute_path_error(t_exec_context *ctx, int status)
+{
+	write(STDERR_FILENO, "minishell: ", 12);
+	if (status == FILE_NOT_FOUND)
+		print_error_message(ctx->current->args[0],
+			": No such file or directory\n", 127, ctx->shell);
+	else if (status == IS_DIRECTORY)
+		print_error_message(ctx->current->args[0], ": Is a directory\n",
+			126, ctx->shell);
+	else if (status == PERMISSION_DENIED)
+		print_error_message(ctx->current->args[0],
+			": Permission denied\n", 126, ctx->shell);
+}
+
+void	handle_command_not_found(t_exec_context *ctx)
 {
 	int	status;
 
-	setup_signals_child();
-	status = check_absolute_path_status(program_path);
-	if (status == FILE_NOT_FOUND)
-		exit(127);
-	else if (status == IS_DIRECTORY)
-		exit(126);
-	else if (status == PERMISSION_DENIED)
-		exit(126);
-	execve(program_path, cmd->args, envp);
-	exit(127);
+	if (find_is_path(ctx->current->args[0])
+		|| ctx->current->args[0][0] == '.')
+	{
+		status = check_absolute_path_status(ctx->current->args[0]);
+		handle_absolute_path_error(ctx, status);
+	}
+	else
+	{
+		print_error_message(ctx->current->args[0], ": command not found\n",
+			127, ctx->shell);
+	}
+	cleanup_and_exit(ctx, ctx->shell->last_exit_code);
 }

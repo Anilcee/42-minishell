@@ -6,13 +6,13 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 02:02:28 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/07 15:36:36 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 17:56:33 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 
-int	should_print_newline(char **args, int *i)
+static int	should_print_newline(char **args, int *i)
 {
 	int	j;
 	int	newline;

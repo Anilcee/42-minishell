@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:51 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/06 20:35:35 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 18:21:12 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,7 @@ void	add_redirect(t_command *cmd, t_redirect_type type, char *filename)
 	}
 }
 
-int	handle_token(t_token **tokens, t_command **current_cmd,
+static int	handle_token(t_token **tokens, t_command **current_cmd,
 		t_command **head, t_shell *shell)
 {
 	if ((*tokens)->t_type == T_PIPE)
