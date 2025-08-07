@@ -69,13 +69,13 @@ void	handle_special_chars(char *input, int *i, t_token **head,
 	if (input[*i] == input[*i + 1])
 	{
 		word = extract_word(input, start, *i + 2);
-		add_token_to_list(head, tail, word, '\0');
+		add_token_to_list(head, tail, word);
 		(*i) += 2;
 	}
 	else
 	{
 		word = extract_word(input, start, *i + 1);
-		add_token_to_list(head, tail, word, '\0');
+		add_token_to_list(head, tail, word);
 		(*i)++;
 	}
 }

@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:34:44 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/06 17:56:07 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 15:31:19 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,31 +15,19 @@
 static int	find_in_path_safe(char *command_name, t_shell *shell,
 		char **program_path)
 {
-	char	*path_env;
-	char	**paths;
 	char	*result;
+	char	*path_env;
 
 	path_env = get_path_env(shell);
 	if (!path_env)
 		return (PATH_NOT_SET);
-	paths = ft_split(path_env, ':');
-	result = search_in_paths(command_name, paths);
-	free_array(paths);
+	result = resolve_path(command_name, path_env);
 	if (result)
 	{
 		*program_path = result;
 		return (CMD_SUCCESS);
 	}
 	return (CMD_NOT_FOUND);
-}
-
-char	*find_in_path(char *command_name, t_shell *shell)
-{
-	char	*program_path;
-
-	if (find_in_path_safe(command_name, shell, &program_path) == CMD_SUCCESS)
-		return (program_path);
-	return (NULL);
 }
 
 static int	handle_absolute_path(char *command_name, char **program_path)
@@ -55,12 +43,6 @@ static int	handle_absolute_path(char *command_name, char **program_path)
 	return (0);
 }
 
-static int	handle_relative_path(char *command_name, char **program_path,
-		t_shell *shell)
-{
-	return (find_in_path_safe(command_name, shell, program_path));
-}
-
 int	external_commands(t_command *cmd, t_shell *shell)
 {
 	pid_t	pid;
@@ -73,10 +55,10 @@ int	external_commands(t_command *cmd, t_shell *shell)
 	command_name = cmd->args[0];
 	if (!command_name)
 		return (-1);
-	if (command_name[0] == '/' || command_name[0] == '.')
+	if (find_is_path(command_name) || command_name[0] == '.')
 		result = handle_absolute_path(command_name, &program_path);
 	else
-		result = handle_relative_path(command_name, &program_path, shell);
+		result = find_in_path_safe(command_name, shell, &program_path);
 	if (result != 0)
 		return (result);
 	setup_signals_parent();
@@ -88,4 +70,12 @@ int	external_commands(t_command *cmd, t_shell *shell)
 	setup_signals();
 	free(program_path);
 	return (process_exit_status(status));
+}
+
+int	find_is_path(char *command_name)
+{
+	if (ft_strchr(command_name, '/'))
+		return (1);
+	else
+		return (0);
 }

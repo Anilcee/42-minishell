@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:31:17 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/05 18:02:27 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 15:37:18 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ int	handle_pipes(t_command *cmds, t_token *tokens, t_shell *shell)
 	return (0);
 }
 
-int	handle_redirections_block(t_redirection_context *ctx, t_shell *shell)
+int	handle_redirections_block(t_redir_context *ctx, t_shell *shell)
 {
 	if (!setup_redirections(ctx->cmds, ctx->saved_stdout,
 			ctx->saved_stdin, shell))

@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 02:02:28 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/05 17:21:21 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 15:36:36 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ int	should_print_newline(char **args, int *i)
 	{
 		if (args[*i][0] != '-')
 			break ;
-		j = 1;  // Start from index 1, after the '-'
+		j = 1;
 		while (args[*i][j] == 'n')
 			j++;
 		if (args[*i][j] != '\0')

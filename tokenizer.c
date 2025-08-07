@@ -6,13 +6,13 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:25 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/05 14:34:56 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 15:40:05 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-t_token	*create_token(char *word, char quote_type)
+t_token	*create_token(char *word)
 {
 	t_token	*token;
 
@@ -21,17 +21,15 @@ t_token	*create_token(char *word, char quote_type)
 		return (NULL);
 	token->value = word;
 	token->t_type = get_token_type(word);
-	token->quote_type = quote_type;
 	token->next = NULL;
 	return (token);
 }
 
-void	add_token_to_list(t_token **head, t_token **tail, char *word,
-		char quote_type)
+void	add_token_to_list(t_token **head, t_token **tail, char *word)
 {
 	t_token	*new_token;
 
-	new_token = create_token(word, quote_type);
+	new_token = create_token(word);
 	if (!*head)
 		*head = new_token;
 	else
@@ -62,7 +60,7 @@ t_token	*tokenize(char *input, t_shell *shell)
 		}
 		word = process_word_token(input, &i, shell);
 		if (word)
-			add_token_to_list(&head, &tail, word, '\0');
+			add_token_to_list(&head, &tail, word);
 	}
 	return (head);
 }

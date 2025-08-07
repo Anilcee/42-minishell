@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:43 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/06 20:22:03 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 15:38:06 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,9 @@
 
 int	execute_command(t_command *cmds, t_token *tokens, t_shell *shell)
 {
-	int						saved_stdout;
-	int						saved_stdin;
-	t_redirection_context	ctx;
+	int				saved_stdout;
+	int				saved_stdin;
+	t_redir_context	ctx;
 
 	if (!validate_command(cmds, shell))
 		return (1);

@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:53 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/06 21:28:54 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/07 15:37:41 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ static int	wait_for_all_processes(t_pid_list *pid_list)
 	return (final_exit_code);
 }
 
-static int	execute_command_loop(t_execution_context *ctx)
+static int	execute_command_loop(t_exec_context *ctx)
 {
 	t_command	*current;
 
@@ -80,9 +80,9 @@ static int	execute_command_loop(t_execution_context *ctx)
 
 int	execute_piped_commands(t_command *cmds, t_token *tokens, t_shell *shell)
 {
-	t_pid_list			*pid_list;
-	t_execution_context	ctx;
-	int					final_exit_code;
+	t_pid_list		*pid_list;
+	t_exec_context	ctx;
+	int				final_exit_code;
 
 	pid_list = NULL;
 	ctx.pipe_data.prev_fd = -1;
