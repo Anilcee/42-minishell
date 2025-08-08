@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:46 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/07 18:22:21 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/08 21:41:28 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ typedef struct s_redirect
 {
 	t_redirect_type				type;
 	char						*filename;
+	int					processed_fd;
 	struct s_redirect			*next;
 }								t_redirect;
 
@@ -163,8 +164,7 @@ int								builtin_export(t_command *cmd, char ***envp,
 									t_env **env_list);
 int								is_valid_identifier(const char *str);
 char							**copy_env(char **envp);
-int								handle_redirections(t_command *cmd,
-									t_shell *shell);
+int								handle_redirections(t_exec_context *ctx);
 int								has_pipe(t_command *cmds);
 int								execute_piped_commands(t_command *cmds,
 									t_token *tokens, t_shell *shell);
@@ -200,8 +200,7 @@ int								is_num(char *str);
 int								ft_isalnum(char c);
 int								ft_strcmp(const char *s1, const char *s2);
 char							*ft_strchr(const char *s, int i);
-int								execute_command(t_command *cmds,
-									t_token *tokens, t_shell *shell);
+int								execute_command(t_exec_context *exec);
 int								builtin_exit(t_command *cmd,
 									int *real_exit_code);
 int								is_builtin(const char *cmd);
@@ -211,7 +210,7 @@ int								ft_atoi(const char *str);
 void							bubble_sort(char **arr, int count);
 void							free_tokens(t_token *head);
 void							free_commands(t_command *head);
-void							free_shell(t_shell *shell);
+void							free_exec(t_exec_context *exec);
 void							free_history_list(t_history *head);
 char							*find_in_path(char *command_name,
 									t_shell *shell);
@@ -237,6 +236,8 @@ int								is_valid_identifier_char(char c);
 int								ft_isspace(int c);
 int								is_special_char(char c);
 int								is_quote(char c);
+int						preprocess_heredocs(t_exec_context *exec);
+void					cleanup_heredocs(t_command *cmds);
 void							add_token_to_list(t_token **head,
 									t_token **tail, char *word);
 t_token_type					get_token_type(char *value);
@@ -250,8 +251,7 @@ int								validate_command(t_command *cmds,
 									t_shell *shell);
 int								handle_pipes(t_command *cmds, t_token *tokens,
 									t_shell *shell);
-int								handle_redirections_block(t_redir_context *ctx,
-									t_shell *shell);
+int								handle_redirections_block(t_redir_context *ctx, t_exec_context *exec);
 int								handle_builtin_or_external(t_command *cmds,
 									t_shell *shell, int saved_stdout,
 									int saved_stdin);
@@ -263,16 +263,14 @@ void							setup_signals_child(void);
 void							setup_signals_parent(void);
 void							handle_external_error(t_command *cmds,
 									int result, t_shell *shell);
-int								setup_redirections(t_command *cmds,
-									int *saved_stdout, int *saved_stdin,
-									t_shell *shell);
+int	setup_redirections(t_redir_context *ctx, t_exec_context *exec,int *saved_stdout, int *saved_stdin);
 void							wait_and_free_pids(t_pid_list *head);
 int								handle_process_creation(t_exec_context *ctx);
 char							*resolve_command_path(char *command_name,
 									t_shell *shell);
-void							run_child_command(t_exec_context *ctx);
+void	run_child_command(t_exec_context *ctx);
 int								handle_heredoc(const char *delimiter,
-									t_shell *shell);
+									t_exec_context *exec);
 char							*get_path_env(t_shell *shell);
 char							*resolve_path(char *command_name,
 									char *path_env);

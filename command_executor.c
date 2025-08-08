@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:31:17 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/07 18:02:45 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/08 21:40:55 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,10 +48,11 @@ int	handle_pipes(t_command *cmds, t_token *tokens, t_shell *shell)
 	return (0);
 }
 
-int	handle_redirections_block(t_redir_context *ctx, t_shell *shell)
+int	handle_redirections_block(t_redir_context *ctx, t_exec_context *exec)
 {
-	if (!setup_redirections(ctx->cmds, ctx->saved_stdout,
-			ctx->saved_stdin, shell))
+	(void)exec;
+	if (!setup_redirections(ctx, exec, ctx->saved_stdout,
+			ctx->saved_stdin))
 	{
 		ctx->shell->last_exit_code = 1;
 		return (0);

@@ -6,18 +6,18 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:31:17 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/07 18:25:05 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/08 21:37:49 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	setup_redirections(t_command *cmds, int *saved_stdout, int *saved_stdin,
-		t_shell *shell)
-{
+int	setup_redirections(t_redir_context *ctx, t_exec_context *exec, int *saved_stdout, int *saved_stdin)
+{	
+	(void)ctx;
 	*saved_stdout = dup(STDOUT_FILENO);
 	*saved_stdin = dup(STDIN_FILENO);
-	if (handle_redirections(cmds, shell) < 0)
+	if (handle_redirections(exec) < 0)
 	{
 		dup2(*saved_stdout, STDOUT_FILENO);
 		dup2(*saved_stdin, STDIN_FILENO);

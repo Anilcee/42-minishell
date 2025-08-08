@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:51 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/07 18:21:12 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/08 20:26:16 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,6 +58,7 @@ void	add_redirect(t_command *cmd, t_redirect_type type, char *filename)
 		return ;
 	new_redirect->type = type;
 	new_redirect->filename = ft_strdup(filename);
+	new_redirect->processed_fd = -1;
 	new_redirect->next = NULL;
 	if (!cmd->redirects)
 		cmd->redirects = new_redirect;

@@ -6,42 +6,67 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:43 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/07 18:20:05 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/08 21:42:31 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	execute_command(t_command *cmds, t_token *tokens, t_shell *shell)
+int	execute_command(t_exec_context *exec)
 {
-	int				saved_stdout;
-	int				saved_stdin;
+	int						saved_stdout;
+	int						saved_stdin;
 	t_redir_context	ctx;
 
-	if (!validate_command(cmds, shell))
+	if (!validate_command(exec->all_cmds, exec->shell))
 		return (1);
-	if (handle_pipes(cmds, tokens, shell))
+	
+	// Her durumda (pipe'lı ya da değil) heredoc'ları önce işle
+	if (preprocess_heredocs(exec) < 0)
+	{
+		exec->shell->last_exit_code = 1;
 		return (1);
-	ctx.cmds = cmds;
+	}
+	
+	if (handle_pipes(exec->all_cmds, exec->all_tokens, exec->shell))
+	{
+		cleanup_heredocs(exec->all_cmds);
+		return (1);
+	}
+	
+	ctx.cmds = exec->all_cmds;
 	ctx.saved_stdout = &saved_stdout;
 	ctx.saved_stdin = &saved_stdin;
-	ctx.shell = shell;
-	if (!handle_redirections_block(&ctx, shell))
+	ctx.shell = exec->shell;
+	if (!handle_redirections_block(&ctx, exec))
+	{
+		cleanup_heredocs(exec->all_cmds);
 		return (1);
-	if (!handle_builtin_or_external(cmds, shell, saved_stdout, saved_stdin))
+	}
+	if (!handle_builtin_or_external(exec->all_cmds, exec->shell, saved_stdout, saved_stdin))
+	{
+		cleanup_heredocs(exec->all_cmds);
 		return (0);
+	}
 	restore_redirections(saved_stdout, saved_stdin);
+	cleanup_heredocs(exec->all_cmds);
 	return (1);
 }
 
-static void	init_shell(t_shell *shell, char **envp)
+static void	init_exec(t_exec_context *exec, char **envp)
 {
-	shell->last_exit_code = 0;
-	shell->envp = copy_env(envp);
-	shell->env_list = envp_to_list(shell->envp);
+	exec->shell = malloc(sizeof(t_shell));
+	if (!exec->shell)
+	{
+		fprintf(stderr, "minishell: memory allocation failed\n");
+		exit(1);
+	}
+	exec->shell->last_exit_code = 0;
+	exec->shell->envp = copy_env(envp);
+	exec->shell->env_list = envp_to_list(exec->shell->envp);
 }
 
-static int	handle_command_flow(char *input, t_shell *shell)
+static int	handle_command_flow(char *input, t_exec_context *exec)
 {
 	t_token		*tokens;
 	t_command	*cmds;
@@ -52,25 +77,30 @@ static int	handle_command_flow(char *input, t_shell *shell)
 	{
 		printf("minishell: syntax error: unclosed quote\n");
 		tokens = NULL;
-		shell->last_exit_code = 1;
+		exec->shell->last_exit_code = 1;
 	}
 	else
 	{
-		tokens = tokenize(input, shell);
-		cmds = parse_tokens(tokens, shell);
+		tokens = tokenize(input, exec->shell);
+		cmds = parse_tokens(tokens, exec->shell);
 		if (cmds)
-			result = execute_command(cmds, tokens, shell);
+		{
+			exec->all_cmds = cmds;
+			exec->all_tokens = tokens;
+			exec->current = cmds;
+			result = execute_command(exec);
+		}
 		else
 		{
 			if (g_signal_received == SIGINT)
-				shell->last_exit_code = 130;
+				exec->shell->last_exit_code = 130;
 		}
 		free_tokens_and_commands(tokens, cmds);
 	}
 	return (result);
 }
 
-static int	process_input(char *input, t_shell *shell)
+static int	process_input(char *input, t_exec_context *exec)
 {
 	int	result;
 
@@ -79,10 +109,10 @@ static int	process_input(char *input, t_shell *shell)
 		printf("exit\n");
 		return (0);
 	}
-	handle_signal_interrupt(shell);
+	handle_signal_interrupt(exec->shell);
 	if (input && *input)
 		add_history(input);
-	result = handle_command_flow(input, shell);
+	result = handle_command_flow(input, exec);
 	free(input);
 	return (result);
 }
@@ -90,22 +120,22 @@ static int	process_input(char *input, t_shell *shell)
 int	main(int argc, char **argv, char **envp)
 {
 	char	*input;
-	t_shell	shell;
+	t_exec_context	exec;
 	int		exit_code;
 
 	(void)argc;
 	(void)argv;
-	init_shell(&shell, envp);
+	init_exec(&exec, envp);
 	setup_signals();
 	while (1)
 	{
 		input = readline("minishell$ ");
-		if (!process_input(input, &shell))
+		if (!process_input(input, &exec))
 			break ;
 	}
-	exit_code = shell.last_exit_code;
+	exit_code = exec.shell->last_exit_code;
 	cleanup_history();
-	free_shell(&shell);
+	free_exec(&exec);
 	rl_clear_history();
 	return (exit_code);
 }

@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:39 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/07 18:09:26 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/08 21:13:18 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 void	cleanup_and_exit(t_exec_context *ctx, int exit_code)
 {
 	if (ctx->shell)
-		free_shell(ctx->shell);
+		free_exec(ctx);
 	if (ctx->all_cmds)
 		free_commands(ctx->all_cmds);
 	if (ctx->all_tokens)

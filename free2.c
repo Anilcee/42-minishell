@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 14:30:24 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/07 18:10:28 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/08 21:07:26 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,14 +71,14 @@ void	free_tokens_and_commands(t_token *tokens, t_command *cmds)
 	free_commands(cmds);
 }
 
-void	free_shell(t_shell *shell)
+void	free_exec(t_exec_context *exec)
 {
-	if (!shell)
+	if (!exec->shell)
 		return ;
-	if (shell->env_list)
-		free_env_list(shell->env_list);
-	if (shell->envp)
-		free_array(shell->envp);
-	shell->env_list = NULL;
-	shell->last_exit_code = 0;
+	if (exec->shell->env_list)
+		free_env_list(exec->shell->env_list);
+	if (exec->shell->envp)
+		free_array(exec->shell->envp);
+	free(exec->shell);
+	exec->shell = NULL;
 }

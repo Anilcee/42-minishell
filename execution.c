@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:53 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/07 17:49:13 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/08 21:59:53 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ void	run_child_command(t_exec_context *ctx)
 	char	*program_path;
 	int		ret;
 
-	if (handle_redirections(ctx->current, ctx->shell) < 0)
+	if (handle_redirections(ctx) < 0)
 		cleanup_and_exit(ctx, 1);
 	if (!ctx->current->args || !ctx->current->args[0])
 		cleanup_and_exit(ctx, 0);
@@ -98,5 +98,6 @@ int	execute_piped_commands(t_command *cmds, t_token *tokens, t_shell *shell)
 		return (1);
 	}
 	final_exit_code = wait_for_all_processes(pid_list);
+	setup_signals();
 	return (final_exit_code);
 }

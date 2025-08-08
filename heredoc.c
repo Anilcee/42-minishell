@@ -6,59 +6,77 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 14:44:08 by oislamog          #+#    #+#             */
-/*   Updated: 2025/08/07 20:54:22 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/08 20:49:18 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	process_heredoc_loop(int pipefd[2], const char *delimiter, t_shell *shell)
+static void	child_heredoc_routine(const char *delimiter, int pipefd[2], t_exec_context *exect)
 {
 	char	*line;
 	char	*expanded;
 
+	setup_signals_heredoc();
+	close(pipefd[0]);
 	while (1)
 	{
 		line = readline("> ");
-		if (g_signal_received)
-		{
-			free(line);
-			close(pipefd[0]);
-			close(pipefd[1]);
-			return (-1);
-		}
 		if (!line || ft_strcmp(line, delimiter) == 0)
 		{
-			free(line);
+			if(!line)
+			{
+				write(2, "minishell: warning: here-document at line x delimited by end-of-file (wanted `", 79);
+				write(2, delimiter, ft_strlen(delimiter));
+				write(2, "')\n", 4);
+			}
+			if (line)
+				free(line);
 			break ;
 		}
-		expanded = process_word_with_expansion(line, 0, ft_strlen(line), shell);
+		expanded = process_word_with_expansion(line, 0, ft_strlen(line), exect->shell);
 		free(line);
 		write(pipefd[1], expanded, ft_strlen(expanded));
 		write(pipefd[1], "\n", 1);
 		free(expanded);
 	}
-	return (0);
+	close(pipefd[1]);
+	cleanup_and_exit(exect,0);
 }
 
-static int	init_heredoc_pipe(int pipefd[2])
+int	handle_heredoc(const char *delimiter, t_exec_context *exec)
 {
+	int		pipefd[2];
+	pid_t	pid;
+	int		status;
+
 	if (pipe(pipefd) == -1)
 		return (-1);
-	setup_signals_heredoc();
-	g_signal_received = 0;
-	return (0);
-}
-
-int	handle_heredoc(const char *delimiter, t_shell *shell)
-{
-	int	pipefd[2];
-
-	if (init_heredoc_pipe(pipefd) < 0)
+	setup_signals_parent();
+	pid = fork();
+	if (pid == -1)
+	{
+		close(pipefd[0]);
+		close(pipefd[1]);
 		return (-1);
-	if (process_heredoc_loop(pipefd, delimiter, shell) < 0)
-		return (-1);
-	setup_signals_heredoc();
+	}
+	if (pid == 0)
+	{
+		child_heredoc_routine(delimiter, pipefd, exec);
+	}
 	close(pipefd[1]);
+	waitpid(pid, &status, 0);
+	setup_signals();
+	if (WIFSIGNALED(status))
+	{
+		if (WTERMSIG(status) == SIGINT)
+		{
+			write(1, "\n", 1);
+			g_signal_received = SIGINT;
+			handle_signal_interrupt(exec->shell); 
+			close(pipefd[0]);
+			return (-1); 
+		}
+	}
 	return (pipefd[0]);
 }

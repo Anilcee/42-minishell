@@ -6,33 +6,57 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 15:49:39 by oislamog          #+#    #+#             */
-/*   Updated: 2025/08/07 18:24:16 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/08 21:13:54 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-static int	handle_input_redirect(t_redirect *redir, int *in_fd, int out_fd,
-							t_shell *shell)
+int	preprocess_heredocs(t_exec_context *exec)
+{
+	t_command	*cmd;
+	t_redirect	*redir;
+
+	cmd = exec->all_cmds;
+	while (cmd)
+	{
+		redir = cmd->redirects;
+		while (redir)
+		{
+			if (redir->type == REDIR_HEREDOC && redir->processed_fd == -1)
+			{
+				redir->processed_fd = handle_heredoc(redir->filename, exec);
+				if (redir->processed_fd < 0)
+					return (-1);
+			}
+			redir = redir->next;
+		}
+		cmd = cmd->next;
+	}
+	return (0);
+}
+
+int	handle_input_redirect(t_redirect *redir, int *in_fd, int out_fd,
+							t_exec_context *exec)
 {
 	if (*in_fd != -1)
 		close(*in_fd);
 	if (redir->type == REDIR_HEREDOC)
-		*in_fd = handle_heredoc(redir->filename, shell);
+	{
+		if (redir->processed_fd != -1)
+		{
+			*in_fd = dup(redir->processed_fd);
+		}
+		else
+		{
+			*in_fd = handle_heredoc(redir->filename, exec);
+		}
+	}
 	else
 		*in_fd = open(redir->filename, O_RDONLY);
 	if (*in_fd < 0)
 	{
-		if (redir->type == REDIR_HEREDOC && g_signal_received)
-		{
-			shell->last_exit_code = 130;
-		}
-		else
-		{
-			write(STDERR_FILENO, "minishell: ", 11);
-			perror(redir->filename);
-			shell->last_exit_code = 1;
-		}
+		perror(redir->filename);
 		if (out_fd != -1)
 			close(out_fd);
 		return (-1);
@@ -40,7 +64,7 @@ static int	handle_input_redirect(t_redirect *redir, int *in_fd, int out_fd,
 	return (0);
 }
 
-static int	handle_output_redirect(t_redirect *redir, int *out_fd, int in_fd)
+int	handle_output_redirect(t_redirect *redir, int *out_fd, int in_fd)
 {
 	int	flags;
 
@@ -62,7 +86,7 @@ static int	handle_output_redirect(t_redirect *redir, int *out_fd, int in_fd)
 	return (0);
 }
 
-static void	apply_redirections(int in_fd, int out_fd)
+void	apply_redirections(int in_fd, int out_fd)
 {
 	if (in_fd != -1)
 	{
@@ -76,20 +100,20 @@ static void	apply_redirections(int in_fd, int out_fd)
 	}
 }
 
-int	handle_redirections(t_command *cmd, t_shell *shell)
+int	handle_redirections(t_exec_context *exec)
 {
 	t_redirect	*redir;
 	int			in_fd;
 	int			out_fd;
 
-	redir = cmd->redirects;
+	redir = exec->current->redirects;
 	in_fd = -1;
 	out_fd = -1;
 	while (redir)
 	{
 		if (redir->type == REDIR_IN || redir->type == REDIR_HEREDOC)
 		{
-			if (handle_input_redirect(redir, &in_fd, out_fd, shell) < 0)
+			if (handle_input_redirect(redir, &in_fd, out_fd, exec) < 0)
 				return (-1);
 		}
 		else if (redir->type == REDIR_OUT || redir->type == REDIR_APPEND)
@@ -101,4 +125,26 @@ int	handle_redirections(t_command *cmd, t_shell *shell)
 	}
 	apply_redirections(in_fd, out_fd);
 	return (0);
+}
+
+void	cleanup_heredocs(t_command *cmds)
+{
+	t_command	*cmd;
+	t_redirect	*redir;
+
+	cmd = cmds;
+	while (cmd)
+	{
+		redir = cmd->redirects;
+		while (redir)
+		{
+			if (redir->type == REDIR_HEREDOC && redir->processed_fd != -1)
+			{
+				close(redir->processed_fd);
+				redir->processed_fd = -1;
+			}
+			redir = redir->next;
+		}
+		cmd = cmd->next;
+	}
 }
