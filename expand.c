@@ -52,31 +52,41 @@ static char	*expand_variable(char *input, int *index, t_env *env_list,
 		return (ft_strdup("$"));
 }
 
+static char	*process_expansion(char *input, int *i, t_shell *shell, char *result)
+{
+	char	*expanded;
+
+	expanded = expand_variable(input, i, shell->env_list, shell);
+	result = append_string(result, expanded);
+	free(expanded);
+	return (result);
+}
+
+static char	*process_regular_char(char *input, int *i, char *result)
+{
+	char	temp_str[2];
+
+	temp_str[0] = input[*i];
+	temp_str[1] = '\0';
+	result = append_string(result, temp_str);
+	(*i)++;
+	return (result);
+}
+
 char	*process_word_with_expansion(char *input, int start, int end,
 		t_shell *shell)
 {
 	char	*result;
 	int		i;
-	char	*expanded;
-	char	temp_str[2];
 
 	result = ft_strdup("");
 	i = start;
 	while (i < end)
 	{
 		if (input[i] == '$')
-		{
-			expanded = expand_variable(input, &i, shell->env_list, shell);
-			result = append_string(result, expanded);
-			free(expanded);
-		}
+			result = process_expansion(input, &i, shell, result);
 		else
-		{
-			temp_str[0] = input[i];
-			temp_str[1] = '\0';
-			result = append_string(result, temp_str);
-			i++;
-		}
+			result = process_regular_char(input, &i, result);
 	}
 	return (result);
 }

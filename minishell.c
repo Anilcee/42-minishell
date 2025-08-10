@@ -12,21 +12,45 @@
 
 #include "minishell.h"
 
-int	execute_command(t_exec_context *exec)
+static int	validate_and_preprocess(t_exec_context *exec)
 {
-	int						saved_stdout;
-	int						saved_stdin;
-	t_redir_context	ctx;
-
 	if (!validate_command(exec->all_cmds, exec->shell))
 		return (1);
-	
-	// Her durumda (pipe'lı ya da değil) heredoc'ları önce işle
 	if (preprocess_heredocs(exec) < 0)
 	{
 		exec->shell->last_exit_code = 1;
 		return (1);
 	}
+	return (0);
+}
+
+static int	handle_single_command(t_exec_context *exec)
+{
+	int				saved_stdout;
+	int				saved_stdin;
+	t_redir_context	ctx;
+
+	ctx.cmds = exec->all_cmds;
+	ctx.saved_stdout = &saved_stdout;
+	ctx.saved_stdin = &saved_stdin;
+	ctx.shell = exec->shell;
+	
+	if (!handle_redirections_block(&ctx, exec))
+		return (1);
+	if (!handle_builtin_or_external(exec->all_cmds, exec->shell, 
+			saved_stdout, saved_stdin))
+		return (0);
+	restore_redirections(saved_stdout, saved_stdin);
+	return (1);
+}
+
+int	execute_command(t_exec_context *exec)
+{
+	int result;
+
+	result = validate_and_preprocess(exec);
+	if (result != 0)
+		return (result);
 	
 	if (handle_pipes(exec->all_cmds, exec->all_tokens, exec->shell))
 	{
@@ -34,23 +58,9 @@ int	execute_command(t_exec_context *exec)
 		return (1);
 	}
 	
-	ctx.cmds = exec->all_cmds;
-	ctx.saved_stdout = &saved_stdout;
-	ctx.saved_stdin = &saved_stdin;
-	ctx.shell = exec->shell;
-	if (!handle_redirections_block(&ctx, exec))
-	{
-		cleanup_heredocs(exec->all_cmds);
-		return (1);
-	}
-	if (!handle_builtin_or_external(exec->all_cmds, exec->shell, saved_stdout, saved_stdin))
-	{
-		cleanup_heredocs(exec->all_cmds);
-		return (0);
-	}
-	restore_redirections(saved_stdout, saved_stdin);
+	result = handle_single_command(exec);
 	cleanup_heredocs(exec->all_cmds);
-	return (1);
+	return (result);
 }
 
 static void	init_exec(t_exec_context *exec, char **envp)
@@ -66,38 +76,46 @@ static void	init_exec(t_exec_context *exec, char **envp)
 	exec->shell->env_list = envp_to_list(exec->shell->envp);
 }
 
+static int	handle_syntax_error(char *input, t_exec_context *exec)
+{
+	(void)input;
+	printf("minishell: syntax error: unclosed quote\n");
+	exec->shell->last_exit_code = 1;
+	return (1);
+}
+
+static int	process_parsed_commands(t_token *tokens, t_command *cmds, t_exec_context *exec)
+{
+	int result;
+
+	if (cmds)
+	{
+		exec->all_cmds = cmds;
+		exec->all_tokens = tokens;
+		exec->current = cmds;
+		result = execute_command(exec);
+	}
+	else
+	{
+		result = 1;
+		if (g_signal_received == SIGINT)
+			exec->shell->last_exit_code = 130;
+	}
+	free_tokens_and_commands(tokens, cmds);
+	return (result);
+}
+
 static int	handle_command_flow(char *input, t_exec_context *exec)
 {
 	t_token		*tokens;
 	t_command	*cmds;
-	int			result;
 
-	result = 1;
 	if (check_unclosed_quotes(input))
-	{
-		printf("minishell: syntax error: unclosed quote\n");
-		tokens = NULL;
-		exec->shell->last_exit_code = 1;
-	}
-	else
-	{
-		tokens = tokenize(input, exec->shell);
-		cmds = parse_tokens(tokens, exec->shell);
-		if (cmds)
-		{
-			exec->all_cmds = cmds;
-			exec->all_tokens = tokens;
-			exec->current = cmds;
-			result = execute_command(exec);
-		}
-		else
-		{
-			if (g_signal_received == SIGINT)
-				exec->shell->last_exit_code = 130;
-		}
-		free_tokens_and_commands(tokens, cmds);
-	}
-	return (result);
+		return (handle_syntax_error(input, exec));
+	
+	tokens = tokenize(input, exec->shell);
+	cmds = parse_tokens(tokens, exec->shell);
+	return (process_parsed_commands(tokens, cmds, exec));
 }
 
 static int	process_input(char *input, t_exec_context *exec)
@@ -119,9 +137,9 @@ static int	process_input(char *input, t_exec_context *exec)
 
 int	main(int argc, char **argv, char **envp)
 {
-	char	*input;
+	char			*input;
 	t_exec_context	exec;
-	int		exit_code;
+	int				exit_code;
 
 	(void)argc;
 	(void)argv;

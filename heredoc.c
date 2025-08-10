@@ -26,7 +26,8 @@ static void	child_heredoc_routine(const char *delimiter, int pipefd[2], t_exec_c
 		{
 			if(!line)
 			{
-				write(2, "minishell: warning: here-document at line x delimited by end-of-file (wanted `", 79);
+				write(2,
+					"minishell: warning: here-document at line x delimited by end-of-file (wanted `", 79);
 				write(2, delimiter, ft_strlen(delimiter));
 				write(2, "')\n", 4);
 			}

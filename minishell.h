@@ -48,7 +48,7 @@ typedef struct s_redirect
 {
 	t_redirect_type				type;
 	char						*filename;
-	int					processed_fd;
+	int							processed_fd;
 	struct s_redirect			*next;
 }								t_redirect;
 
@@ -236,8 +236,8 @@ int								is_valid_identifier_char(char c);
 int								ft_isspace(int c);
 int								is_special_char(char c);
 int								is_quote(char c);
-int						preprocess_heredocs(t_exec_context *exec);
-void					cleanup_heredocs(t_command *cmds);
+int								preprocess_heredocs(t_exec_context *exec);
+void							cleanup_heredocs(t_command *cmds);
 void							add_token_to_list(t_token **head,
 									t_token **tail, char *word);
 t_token_type					get_token_type(char *value);
@@ -251,7 +251,8 @@ int								validate_command(t_command *cmds,
 									t_shell *shell);
 int								handle_pipes(t_command *cmds, t_token *tokens,
 									t_shell *shell);
-int								handle_redirections_block(t_redir_context *ctx, t_exec_context *exec);
+int								handle_redirections_block(t_redir_context *ctx,
+									t_exec_context *exec);
 int								handle_builtin_or_external(t_command *cmds,
 									t_shell *shell, int saved_stdout,
 									int saved_stdin);
@@ -263,12 +264,14 @@ void							setup_signals_child(void);
 void							setup_signals_parent(void);
 void							handle_external_error(t_command *cmds,
 									int result, t_shell *shell);
-int	setup_redirections(t_redir_context *ctx, t_exec_context *exec,int *saved_stdout, int *saved_stdin);
+int								setup_redirections(t_redir_context *ctx,
+									t_exec_context *exec, int *saved_stdout,
+									int *saved_stdin);
 void							wait_and_free_pids(t_pid_list *head);
 int								handle_process_creation(t_exec_context *ctx);
 char							*resolve_command_path(char *command_name,
 									t_shell *shell);
-void	run_child_command(t_exec_context *ctx);
+void							run_child_command(t_exec_context *ctx);
 int								handle_heredoc(const char *delimiter,
 									t_exec_context *exec);
 char							*get_path_env(t_shell *shell);

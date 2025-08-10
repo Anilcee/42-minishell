@@ -39,6 +39,7 @@ int	preprocess_heredocs(t_exec_context *exec)
 int	handle_input_redirect(t_redirect *redir, int *in_fd, int out_fd,
 							t_exec_context *exec)
 {
+	(void)exec;
 	if (*in_fd != -1)
 		close(*in_fd);
 	if (redir->type == REDIR_HEREDOC)
@@ -49,7 +50,8 @@ int	handle_input_redirect(t_redirect *redir, int *in_fd, int out_fd,
 		}
 		else
 		{
-			*in_fd = handle_heredoc(redir->filename, exec);
+			perror("heredoc not preprocessed");
+			return (-1);
 		}
 	}
 	else

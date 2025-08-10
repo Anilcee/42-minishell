@@ -55,24 +55,16 @@ char	*resolve_path(char *command_name, char *path_env)
 	return (program_path);
 }
 
-static char	*resolve_path_command(char *command_name, t_shell *shell)
-{
-	char	*path_env;
-	char	*program_path;
-
-	path_env = get_path_env(shell);
-	if (!path_env)
-		return (NULL);
-	program_path = resolve_path(command_name, path_env);
-	if (!program_path)
-		return (NULL);
-	return (program_path);
-}
 
 char	*resolve_command_path(char *command_name, t_shell *shell)
 {
+	char	*path_env;
+
 	if (find_is_path(command_name) || command_name[0] == '.')
 		return (validate_absolute_path(command_name));
-	else
-		return (resolve_path_command(command_name, shell));
+	
+	path_env = get_path_env(shell);
+	if (!path_env)
+		return (NULL);
+	return (resolve_path(command_name, path_env));
 }
