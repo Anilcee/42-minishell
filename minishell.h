@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:46 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/08 21:41:28 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/11 01:31:38 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -290,5 +290,14 @@ void							free_tokens_and_commands(t_token *tokens,
 int								process_exit_status(int status);
 int								find_is_path(char *command_name);
 void							handle_command_not_found(t_exec_context *ctx);
+int								handle_syntax_error(char *input,
+									t_exec_context *exec);
+int								process_parsed_commands(t_token *tokens,
+									t_command *cmds, t_exec_context *exec);
+int								handle_command_flow(char *input,
+									t_exec_context *exec);
+int								execute_command(t_exec_context *exec);
+int								execute_external_cmd(t_command *cmds,
+									t_shell *shell);
 
 #endif

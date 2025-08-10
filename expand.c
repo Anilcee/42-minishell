@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   expand.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 14:32:52 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/07 18:06:46 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/11 01:00:27 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,8 @@ static char	*expand_variable(char *input, int *index, t_env *env_list,
 		return (ft_strdup("$"));
 }
 
-static char	*process_expansion(char *input, int *i, t_shell *shell, char *result)
+static char	*process_expansion(char *input, int *i, t_shell *shell,
+		char *result)
 {
 	char	*expanded;
 

@@ -3,17 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   external_utils.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:34:44 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/07 20:02:21 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/11 01:15:22 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-static int	execute_child_process(char *program_path,
-			t_command *cmd, char **envp)
+static int	execute_child_process(char *program_path, t_command *cmd,
+		char **envp)
 {
 	int	status;
 
@@ -31,26 +31,25 @@ static int	execute_child_process(char *program_path,
 
 static int	handle_command_not_found_error(char *command_name, t_shell *shell)
 {
+	int		check_result;
+	char	*path_env;
+
 	if (find_is_path(command_name) || command_name[0] == '.')
 	{
-		int check_result = check_absolute_path_status(command_name);
-		if (check_result == FILE_NOT_FOUND)
-			return (CMD_NOT_FOUND);
-		else if (check_result == IS_DIRECTORY)
-			return (IS_DIRECTORY);
-		else if (check_result == PERMISSION_DENIED)
-			return (PERMISSION_DENIED);
+		check_result = check_absolute_path_status(command_name);
+		return (check_result);
 	}
 	else
 	{
-		char *path_env = get_path_env(shell);
+		path_env = get_path_env(shell);
 		if (!path_env)
 			return (PATH_NOT_SET);
 	}
 	return (CMD_NOT_FOUND);
 }
 
-static int	execute_external_process(char *program_path, t_command *cmd, t_shell *shell)
+static int	execute_external_process(char *program_path, t_command *cmd,
+		t_shell *shell)
 {
 	pid_t	pid;
 	int		status;
@@ -74,11 +73,9 @@ int	external_commands(t_command *cmd, t_shell *shell)
 	command_name = cmd->args[0];
 	if (!command_name)
 		return (-1);
-	
 	program_path = resolve_command_path(command_name, shell);
 	if (!program_path)
 		return (handle_command_not_found_error(command_name, shell));
-	
 	result = execute_external_process(program_path, cmd, shell);
 	free(program_path);
 	return (result);

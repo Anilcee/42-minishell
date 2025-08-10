@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   path_finder.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 15:58:03 by oislamog          #+#    #+#             */
-/*   Updated: 2025/08/07 18:22:47 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/11 01:15:18 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,14 +55,12 @@ char	*resolve_path(char *command_name, char *path_env)
 	return (program_path);
 }
 
-
 char	*resolve_command_path(char *command_name, t_shell *shell)
 {
 	char	*path_env;
 
 	if (find_is_path(command_name) || command_name[0] == '.')
 		return (validate_absolute_path(command_name));
-	
 	path_env = get_path_env(shell);
 	if (!path_env)
 		return (NULL);

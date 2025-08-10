@@ -6,7 +6,7 @@
 /*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 10:31:17 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/01 12:07:52 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/11 01:03:05 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,4 +74,12 @@ int	execute_builtin(t_command *cmds, t_shell *shell)
 	if (handle_exit_builtin(cmds, shell))
 		return (-1);
 	return (0);
+}
+
+int	is_builtin(const char *cmd)
+{
+	return (ft_strcmp(cmd, "cd") == 0 || ft_strcmp(cmd, "pwd") == 0
+		|| ft_strcmp(cmd, "env") == 0 || ft_strcmp(cmd, "echo") == 0
+		|| ft_strcmp(cmd, "export") == 0 || ft_strcmp(cmd, "unset") == 0
+		|| ft_strcmp(cmd, "exit") == 0);
 }

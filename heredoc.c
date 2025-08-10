@@ -3,16 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   heredoc.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 14:44:08 by oislamog          #+#    #+#             */
-/*   Updated: 2025/08/08 20:49:18 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/11 01:01:47 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-static void	child_heredoc_routine(const char *delimiter, int pipefd[2], t_exec_context *exect)
+static void	child_heredoc_routine(const char *delimiter, int pipefd[2],
+		t_exec_context *exect)
 {
 	char	*line;
 	char	*expanded;
@@ -24,10 +25,11 @@ static void	child_heredoc_routine(const char *delimiter, int pipefd[2], t_exec_c
 		line = readline("> ");
 		if (!line || ft_strcmp(line, delimiter) == 0)
 		{
-			if(!line)
+			if (!line)
 			{
 				write(2,
-					"minishell: warning: here-document at line x delimited by end-of-file (wanted `", 79);
+					"minishell: warning: here-document at line x delimited by end-of-file (wanted `",
+					79);
 				write(2, delimiter, ft_strlen(delimiter));
 				write(2, "')\n", 4);
 			}
@@ -35,14 +37,15 @@ static void	child_heredoc_routine(const char *delimiter, int pipefd[2], t_exec_c
 				free(line);
 			break ;
 		}
-		expanded = process_word_with_expansion(line, 0, ft_strlen(line), exect->shell);
+		expanded = process_word_with_expansion(line, 0, ft_strlen(line),
+				exect->shell);
 		free(line);
 		write(pipefd[1], expanded, ft_strlen(expanded));
 		write(pipefd[1], "\n", 1);
 		free(expanded);
 	}
 	close(pipefd[1]);
-	cleanup_and_exit(exect,0);
+	cleanup_and_exit(exect, 0);
 }
 
 int	handle_heredoc(const char *delimiter, t_exec_context *exec)
@@ -74,9 +77,9 @@ int	handle_heredoc(const char *delimiter, t_exec_context *exec)
 		{
 			write(1, "\n", 1);
 			g_signal_received = SIGINT;
-			handle_signal_interrupt(exec->shell); 
+			handle_signal_interrupt(exec->shell);
 			close(pipefd[0]);
-			return (-1); 
+			return (-1);
 		}
 	}
 	return (pipefd[0]);
