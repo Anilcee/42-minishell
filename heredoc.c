@@ -30,7 +30,7 @@ static int	process_heredoc_line(char *line, const char *delimiter,
 
 	if (!line || ft_strcmp(line, delimiter) == 0)
 	{
-		if (!line)
+		if (!line && g_signal_received != SIGINT)
 			print_heredoc_warning(delimiter);
 		if (line)
 			free(line);
@@ -55,6 +55,13 @@ static void	child_heredoc_routine(const char *delimiter, int pipefd[2],
 	while (1)
 	{
 		line = readline("> ");
+		if (g_signal_received == SIGINT)
+		{
+			if (line)
+				free(line);
+			close(pipefd[1]);
+			cleanup_and_exit(exect, 130);
+		}
 		if (!process_heredoc_line(line, delimiter, pipefd, exect))
 			break ;
 	}

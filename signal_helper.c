@@ -12,10 +12,27 @@
 
 #include "minishell.h"
 
+void	heredoc_sigint_handler(int sig)
+{
+	(void)sig;
+	g_signal_received = SIGINT;
+	write(1, "\n", 1);
+	close(STDIN_FILENO);
+}
+
 void	setup_signals_heredoc(void)
 {
-	signal(SIGINT, SIG_DFL);
-	signal(SIGQUIT, SIG_IGN);
+	struct sigaction	sa_int;
+	struct sigaction	sa_quit;
+
+	sigemptyset(&sa_int.sa_mask);
+	sa_int.sa_flags = 0;
+	sa_int.sa_handler = heredoc_sigint_handler;
+	sigaction(SIGINT, &sa_int, NULL);
+	sigemptyset(&sa_quit.sa_mask);
+	sa_quit.sa_flags = 0;
+	sa_quit.sa_handler = SIG_IGN;
+	sigaction(SIGQUIT, &sa_quit, NULL);
 }
 
 void	setup_signals_child(void)

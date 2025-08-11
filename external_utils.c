@@ -54,6 +54,7 @@ static int	execute_external_process(char *program_path, t_command *cmd,
 	pid_t	pid;
 	int		status;
 
+	status = 0;
 	setup_signals_parent();
 	pid = fork();
 	if (pid == 0)

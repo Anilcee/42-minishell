@@ -17,7 +17,7 @@ static void	init_exec(t_exec_context *exec, char **envp)
 	exec->shell = malloc(sizeof(t_shell));
 	if (!exec->shell)
 	{
-		fprintf(stderr, "minishell: memory allocation failed\n");
+		write(STDERR_FILENO, "minishell: memory allocation failed\n", 36);
 		exit(1);
 	}
 	exec->shell->last_exit_code = 0;
