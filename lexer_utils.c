@@ -43,6 +43,17 @@ static char	*handle_normal_text(char *input, int *i, t_shell *shell)
 	return (process_word_with_expansion(input, start, *i, shell));
 }
 
+char	*process_regular_char(char *input, int *i, char *result)
+{
+	char	temp_str[2];
+
+	temp_str[0] = input[*i];
+	temp_str[1] = '\0';
+	result = append_string(result, temp_str);
+	(*i)++;
+	return (result);
+}
+
 char	*process_word_token(char *input, int *i, t_shell *shell)
 {
 	char	*combined_word;

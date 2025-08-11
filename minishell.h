@@ -6,7 +6,7 @@
 /*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:46 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/11 01:31:38 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/11 04:09:10 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -243,6 +243,8 @@ void							add_token_to_list(t_token **head,
 t_token_type					get_token_type(char *value);
 void							handle_special_chars(char *input, int *i,
 									t_token **head, t_token **tail);
+char							*process_regular_char(char *input, int *i,
+									char *result);
 char							*process_word_token(char *input, int *i,
 									t_shell *shell);
 char							*process_word_no_expansion(char *input,
@@ -299,5 +301,7 @@ int								handle_command_flow(char *input,
 int								execute_command(t_exec_context *exec);
 int								execute_external_cmd(t_command *cmds,
 									t_shell *shell);
+int								handle_heredoc_signal(int status, int pipefd[2],
+									t_exec_context *exec);
 
 #endif

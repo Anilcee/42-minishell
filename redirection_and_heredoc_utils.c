@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   redirection_and_heredoc_utils.c                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 15:49:39 by oislamog          #+#    #+#             */
-/*   Updated: 2025/08/08 21:13:54 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/11 04:00:30 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,26 +127,4 @@ int	handle_redirections(t_exec_context *exec)
 	}
 	apply_redirections(in_fd, out_fd);
 	return (0);
-}
-
-void	cleanup_heredocs(t_command *cmds)
-{
-	t_command	*cmd;
-	t_redirect	*redir;
-
-	cmd = cmds;
-	while (cmd)
-	{
-		redir = cmd->redirects;
-		while (redir)
-		{
-			if (redir->type == REDIR_HEREDOC && redir->processed_fd != -1)
-			{
-				close(redir->processed_fd);
-				redir->processed_fd = -1;
-			}
-			redir = redir->next;
-		}
-		cmd = cmd->next;
-	}
 }

@@ -39,10 +39,10 @@ SRCS        =   minishell.c						\
 				redirection_and_heredoc_utils.c	\
 				pipe_utils.c 					\
 				path_finder.c 					\
-				path_utils.c					\
 				redirection_handler.c			\
 				expand.c						\
-				heredoc.c
+				heredoc.c						\
+				heredoc_helper.c
 OBJS        = $(SRCS:.c=.o)
 HEADER      = minishell.h
 

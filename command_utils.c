@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   command_utils.c                                     :+:      :+:    :+:   */
+/*   command_utils.c                                     :+:      :+:    :+:  */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -74,4 +74,4 @@ int	execute_external_cmd(t_command *cmds, t_shell *shell)
 	else
 		shell->last_exit_code = external_result;
 	return (1);
-} 
+}

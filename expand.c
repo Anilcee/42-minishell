@@ -6,7 +6,7 @@
 /*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 14:32:52 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/11 01:00:27 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/11 04:08:18 by ancengiz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,17 +60,6 @@ static char	*process_expansion(char *input, int *i, t_shell *shell,
 	expanded = expand_variable(input, i, shell->env_list, shell);
 	result = append_string(result, expanded);
 	free(expanded);
-	return (result);
-}
-
-static char	*process_regular_char(char *input, int *i, char *result)
-{
-	char	temp_str[2];
-
-	temp_str[0] = input[*i];
-	temp_str[1] = '\0';
-	result = append_string(result, temp_str);
-	(*i)++;
 	return (result);
 }
 
