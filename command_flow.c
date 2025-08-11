@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   command_flow.c                                      :+:      :+:    :+:  */
+/*   command_flow.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/11 01:30:00 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/11 01:30:00 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/11 19:36:10 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 int	handle_syntax_error(char *input, t_exec_context *exec)
 {
 	(void)input;
-	printf("minishell: syntax error: unclosed quote\n");
+	write(2, "minishell: syntax error: unclosed quote\n", 41);
 	exec->shell->last_exit_code = 1;
 	return (1);
 }

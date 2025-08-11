@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   redirection_and_heredoc_utils.c                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 15:49:39 by oislamog          #+#    #+#             */
-/*   Updated: 2025/08/11 04:00:30 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/11 19:48:10 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ int	preprocess_heredocs(t_exec_context *exec)
 }
 
 int	handle_input_redirect(t_redirect *redir, int *in_fd, int out_fd,
-							t_exec_context *exec)
+		t_exec_context *exec)
 {
 	(void)exec;
 	if (*in_fd != -1)
@@ -49,10 +49,7 @@ int	handle_input_redirect(t_redirect *redir, int *in_fd, int out_fd,
 			*in_fd = dup(redir->processed_fd);
 		}
 		else
-		{
-			perror("heredoc not preprocessed");
 			return (-1);
-		}
 	}
 	else
 		*in_fd = open(redir->filename, O_RDONLY);

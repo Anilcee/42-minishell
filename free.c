@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:39 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/08 21:13:18 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/11 19:44:36 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,20 +49,6 @@ void	free_tokens(t_token *head)
 		head = head->next;
 		if (temp->value)
 			free(temp->value);
-		free(temp);
-	}
-}
-
-void	free_history_list(t_history *head)
-{
-	t_history	*temp;
-
-	while (head)
-	{
-		temp = head;
-		head = head->next;
-		if (temp->line)
-			free(temp->line);
 		free(temp);
 	}
 }

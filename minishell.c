@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:43 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/11 01:29:05 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/11 19:41:53 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,6 @@ int	main(int argc, char **argv, char **envp)
 			break ;
 	}
 	exit_code = exec.shell->last_exit_code;
-	cleanup_history();
 	free_exec(&exec);
 	rl_clear_history();
 	return (exit_code);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancengiz <ancengiz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:46 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/11 04:09:10 by ancengiz         ###   ########.fr       */
+/*   Updated: 2025/08/11 19:46:04 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,12 +76,6 @@ typedef struct s_token
 	struct s_token				*next;
 	t_token_type				t_type;
 }								t_token;
-
-typedef struct s_history
-{
-	char						*line;
-	struct s_history			*next;
-}								t_history;
 
 typedef struct s_env
 {
@@ -158,8 +152,6 @@ int								builtin_cd(t_command *cmd, t_env **env_list);
 int								builtin_pwd(void);
 int								builtin_env(char **env);
 int								builtin_echo(t_command *cmd);
-void							builtin_history(char *line);
-void							cleanup_history(void);
 int								builtin_export(t_command *cmd, char ***envp,
 									t_env **env_list);
 int								is_valid_identifier(const char *str);
@@ -211,11 +203,7 @@ void							bubble_sort(char **arr, int count);
 void							free_tokens(t_token *head);
 void							free_commands(t_command *head);
 void							free_exec(t_exec_context *exec);
-void							free_history_list(t_history *head);
-char							*find_in_path(char *command_name,
-									t_shell *shell);
 void							free_array(char **arr);
-int								get_exit_status(int status);
 void							bubble_sort(char **arr, int count);
 t_env							*create_new_env_node(char *key, char *value);
 void							append_env_node(t_env **head, t_env *new_node);

@@ -21,7 +21,6 @@ SRCS        =   minishell.c						\
 				builtin/builtin_env.c			\
 				builtin/builtin_exit.c			\
 				builtin/builtin_export.c		\
-				builtin/builtin_history.c		\
 				builtin/builtin_pwd.c			\
 				builtin/builtin_unset.c			\
 				builtin/builtin_executor.c		\
