@@ -41,6 +41,7 @@ SRCS        =   minishell.c						\
 				redirection_handler.c			\
 				expand.c						\
 				heredoc.c						\
+				builtin/builtin_export_util.c   \
 				heredoc_helper.c
 OBJS        = $(SRCS:.c=.o)
 HEADER      = minishell.h

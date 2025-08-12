@@ -6,40 +6,11 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 10:37:12 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/07 18:32:43 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/12 16:32:54 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
-
-static void	print_exported_vars(t_env *env_list)
-{
-	int		count;
-	t_env	*tmp;
-	char	**arr;
-	int		i;
-
-	count = 0;
-	tmp = env_list;
-	while (tmp)
-	{
-		count++;
-		tmp = tmp->next;
-	}
-	if (count == 0)
-		return ;
-	arr = env_list_to_array(env_list, count);
-	if (!arr)
-		return ;
-	bubble_sort(arr, count);
-	i = 0;
-	while (i < count)
-	{
-		printf("declare -x %s\n", arr[i]);
-		i++;
-	}
-	free_array(arr);
-}
 
 static int	handle_export_with_value(char *arg, char ***envp, t_env **env_list)
 {
@@ -49,20 +20,22 @@ static int	handle_export_with_value(char *arg, char ***envp, t_env **env_list)
 }
 
 static int	handle_export_without_value(char *arg, char ***envp,
-			t_env **env_list)
+		t_env **env_list)
 {
 	char	*existing_value;
-	char	*new_var;
+	t_env	*current;
 
+	(void)envp;
 	existing_value = get_env_value(*env_list, arg);
 	if (existing_value)
 		return (0);
-	new_var = ft_strjoin(arg, "=");
-	if (!new_var)
+	current = malloc(sizeof(t_env));
+	if (!current)
 		return (0);
-	add_env_list(env_list, new_var);
-	*envp = add_envp(*envp, new_var);
-	free(new_var);
+	current->key = ft_strdup(arg);
+	current->value = NULL;
+	current->next = NULL;
+	append_env_node(env_list, current);
 	return (0);
 }
 

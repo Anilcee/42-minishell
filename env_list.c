@@ -41,7 +41,12 @@ t_env	*add_env_list(t_env **head, char *input)
 	while (current)
 	{
 		if (ft_strcmp(current->key, key) == 0)
-			return (update_existing_env_node(current, key, value));
+		{
+			free(current->value);
+			current->value = value;
+			free(key);
+			return (current);
+		}
 		if (!current->next)
 			break ;
 		current = current->next;

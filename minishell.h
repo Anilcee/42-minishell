@@ -6,7 +6,7 @@
 /*   By: oislamog <oislamog@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 01:35:46 by ancengiz          #+#    #+#             */
-/*   Updated: 2025/08/11 19:46:04 by oislamog         ###   ########.fr       */
+/*   Updated: 2025/08/12 16:35:05 by oislamog         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,7 +72,6 @@ typedef enum e_token_type
 typedef struct s_token
 {
 	char						*value;
-	char						quote_type;
 	struct s_token				*next;
 	t_token_type				t_type;
 }								t_token;
@@ -132,6 +131,7 @@ typedef enum e_exit_result
 
 extern volatile sig_atomic_t	g_signal_received;
 
+void							print_exported_vars(t_env *env_list);
 char							**ft_split(const char *str, char separator);
 char							*ft_strjoin(char const *s1, char const *s2);
 char							*ft_strdup(const char *s);
@@ -291,5 +291,9 @@ int								execute_external_cmd(t_command *cmds,
 									t_shell *shell);
 int								handle_heredoc_signal(int status, int pipefd[2],
 									t_exec_context *exec);
+int								append_heredoc_line(char *line,
+									const char *delimiter, char **buffer,
+									t_exec_context *exect);
+void							print_heredoc_warning(const char *delimiter);
 
 #endif
